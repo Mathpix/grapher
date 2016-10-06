@@ -1,0 +1,28 @@
+{
+  "name": "grapher",
+  "version": "v0.0.1",
+  "description": "3D grapher using MathQuill and three.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mathpix/grapher.git"
+  },
+  "author": "August <augustt198@gmail.com>",
+  "contributors": [
+    "Nicolas D. Jimenez <nicodjimenez@gmail.com>",
+    "Han <laughinghan@gmail.com>"
+  ],
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/Mathpix/grapher/issues"
+  },
+  "homepage": "http://grapher.mathpix.com",
+  "scripts": {
+    "build": "cd \"$(git rev-parse --show-cdup)\" && webpack assets/scripts/entry.js bundle.js"
+  },
+  "devDependencies": {
+    "webpack": "^1.13.2"
+  },
+  "dependencies": {
+    "mathjs": "^3.5.3"
+  }
+}
