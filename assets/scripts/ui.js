@@ -1,3 +1,7 @@
+var React = require('react');
+var ReactDOM = require('react-dom');
+var MQ = MathQuill.getInterface(2);
+
 Grapher.ReactComponents = {};
 
 var EquationSidebar = React.createClass({
