@@ -5,9 +5,9 @@ require('three/examples/js/controls/TrackballControls.js'); // mutates window.TH
 require('three/examples/js/controls/OrbitControls.js'); // mutates window.THREE
 
 window.THREEx = {};
-require('imports?THREEx=>window.THREEx!./vendor/THREEx.KeyboardState.js'); // mutates window.THREEx
-require('imports?THREEx=>window.THREEx!./vendor/THREEx.WindowResize.js'); // mutates window.THREEx
-require('imports?THREEx=>window.THREEx!./vendor/THREEx.FullScreen.js'); // mutates window.THREEx
+THREEx.KeyboardState = require('exports?THREEx.KeyboardState!./vendor/THREEx.KeyboardState.js');
+THREEx.WindowResize = require('exports?THREEx.WindowResize!./vendor/THREEx.WindowResize.js');
+THREEx.FullScreen = require('exports?THREEx.FullScreen!./vendor/THREEx.FullScreen.js');
 
 require('materialize-css'); // mutates window.$ (jQuery)
 
