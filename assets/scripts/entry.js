@@ -9,6 +9,7 @@ THREEx.KeyboardState = require('exports?THREEx.KeyboardState!./vendor/THREEx.Key
 THREEx.WindowResize = require('exports?THREEx.WindowResize!./vendor/THREEx.WindowResize.js');
 THREEx.FullScreen = require('exports?THREEx.FullScreen!./vendor/THREEx.FullScreen.js');
 
+window.$ = window.jQuery = require('jquery');
 require('materialize-css'); // mutates window.$ (jQuery)
 
 window.math = require('mathjs');
