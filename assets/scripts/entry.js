@@ -10,6 +10,7 @@ require('imports?THREEx=>window.THREEx!./vendor/THREEx.WindowResize.js'); // mut
 require('imports?THREEx=>window.THREEx!./vendor/THREEx.FullScreen.js'); // mutates window.THREEx
 
 window.math = require('mathjs');
+require('./vendor/mathquill.min.js'); // mutates window
 
 // code for our actual app
 window.Grapher = {};
