@@ -9,6 +9,8 @@ require('imports?THREEx=>window.THREEx!./vendor/THREEx.KeyboardState.js'); // mu
 require('imports?THREEx=>window.THREEx!./vendor/THREEx.WindowResize.js'); // mutates window.THREEx
 require('imports?THREEx=>window.THREEx!./vendor/THREEx.FullScreen.js'); // mutates window.THREEx
 
+require('materialize-css'); // mutates window.$ (jQuery)
+
 window.math = require('mathjs');
 require('./vendor/mathquill.min.js'); // mutates window
 
