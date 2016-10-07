@@ -1,5 +1,4 @@
-Grapher._3D = {};
-_3D = Grapher._3D;
+var _3D = exports._3D = {};
 
 _3D.Main = {
     container:  undefined,
