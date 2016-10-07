@@ -1,3 +1,5 @@
+var createIsoSurface = require('./mc.js').createIsoSurface;
+
 function processLatex(latex) {
     latex = latex.replace(/\\left/g, "");
     latex = latex.replace(/\\right/g, "");
@@ -21,7 +23,7 @@ var mathField = MQ.MathField(mathFieldEle, {
     }
 })
 
-function dograph(latexArr) {
+exports.dograph = function(latexArr) {
     var meshes = [];
     latexArr.forEach(function(latex) {
         var vecComponents = extractVectorComponents(latex);

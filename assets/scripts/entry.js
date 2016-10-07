@@ -17,4 +17,5 @@ require('./vendor/mathquill.min.js'); // mutates window
 
 // code for our actual app
 window.Grapher = {};
+require('./3d.js');
 require('babel?presets=react!./ui.js'); // mutates window.Grapher

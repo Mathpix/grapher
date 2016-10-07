@@ -2,6 +2,8 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var MQ = MathQuill.getInterface(2);
 
+var dograph = require('./mathedit.js').dograph;
+
 Grapher.ReactComponents = {};
 
 var EquationSidebar = React.createClass({
