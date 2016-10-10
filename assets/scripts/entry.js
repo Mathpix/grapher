@@ -5,9 +5,7 @@ require('three/examples/js/controls/TrackballControls.js'); // mutates window.TH
 require('three/examples/js/controls/OrbitControls.js'); // mutates window.THREE
 
 window.THREEx = {};
-THREEx.KeyboardState = require('exports?THREEx.KeyboardState!./vendor/THREEx.KeyboardState.js');
 THREEx.WindowResize = require('exports?THREEx.WindowResize!./vendor/THREEx.WindowResize.js');
-THREEx.FullScreen = require('exports?THREEx.FullScreen!./vendor/THREEx.FullScreen.js');
 
 window.$ = window.jQuery = require('jquery');
 require('materialize-css'); // mutates window.$ (jQuery)
