@@ -1,4 +1,5 @@
 var Grapher = require('./3d.js');
+var math = require('mathjs');
 var createIsoSurface = require('./mc.js').createIsoSurface;
 
 function processLatex(latex) {

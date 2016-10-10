@@ -1,3 +1,6 @@
+var Detector = require('three/examples/js/Detector.js');
+var WindowResize = require('exports?THREEx.WindowResize!./vendor/THREEx.WindowResize.js');
+
 var _3D = exports._3D = {};
 
 _3D.Main = {
@@ -80,7 +83,7 @@ function init() {
     var container = _3D.Main.container;
     container.appendChild(renderer.domElement);
     // EVENTS
-    THREEx.WindowResize(renderer, camera, dimensionCallback);
+    WindowResize(renderer, camera, dimensionCallback);
     // CONTROLS
 
     _3D.Main.controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -249,7 +252,7 @@ function resetCamera() {
     controls = new THREE.OrbitControls( camera, renderer.domElement );
     controls.minDistance = 1;
     controls.maxDistance = 2000;
-    THREEx.WindowResize(renderer, camera, dimensionCallback);
+    WindowResize(renderer, camera, dimensionCallback);
 }
 function animate() {
     requestAnimationFrame(animate);
