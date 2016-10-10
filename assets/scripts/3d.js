@@ -248,7 +248,6 @@ function resetCamera() {
     camera.lookAt(scene.position);
     scene.add(camera);
 
-    //controls = new THREE.TrackballControls( camera, renderer.domElement );
     controls = new THREE.OrbitControls( camera, renderer.domElement );
     controls.minDistance = 1;
     controls.maxDistance = 2000;

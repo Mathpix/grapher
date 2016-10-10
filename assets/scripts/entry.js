@@ -1,6 +1,5 @@
 // dependencies
 window.THREE = require('three');
-require('three/examples/js/controls/TrackballControls.js'); // mutates window.THREE
 require('three/examples/js/controls/OrbitControls.js'); // mutates window.THREE
 
 window.$ = window.jQuery = require('jquery');
