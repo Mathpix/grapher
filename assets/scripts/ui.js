@@ -44,17 +44,7 @@ var EquationSidebar = React.createClass({
 })
 
 var EquationOptions = React.createClass({
-    getInitialState: function() {
-        return {
-            traceActive: false
-        };
-    },
     render: function() {
-        var traceClass = "icon-btn btn tooltipped";
-        if (this.state.traceActive) {
-            traceClass += " blue";
-        }
-
         return (
         <div className="teal eqs-toolbar">
             <a className="dropdown-button btn" data-activates='add-dropdown'>
@@ -72,32 +62,12 @@ var EquationOptions = React.createClass({
                     Point
                 </a></li>
             </ul>
-            <a className={traceClass}
-                data-position="bottom" data-delay="50" data-tooltip="trace surface"
-                onClick={this.toggleTrace}>
-                <i className="material-icons">my_location</i>
-            </a>
-
         </div>
         );
     },
     componentDidMount: function() {
         $('.dropdown-button').dropdown();
         $('.tooltipped').tooltip();
-    },
-    toggleTrace: function() {
-        var newState = !this.state.traceActive
-        this.setState({
-            traceActive: newState
-        });
-        Grapher._3D.Main.traceActive = newState;
-
-        var ele = document.getElementById("trace-info-container");
-        if (newState) {
-            ele.setAttribute('style', 'display: block');
-        } else {
-            ele.setAttribute('style', 'display: none');
-        }
     }
 });
 
