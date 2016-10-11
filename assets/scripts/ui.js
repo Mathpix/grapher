@@ -278,11 +278,53 @@ var EquationEntry = React.createClass({
     }
 });
 
+var Controls = React.createClass({
+    getInitialState: function() {
+        return {
+            traceActive: false
+        }
+    },
+    render: function() {
+        var traceClass = "icon-btn btn";
+        if (this.state.traceActive) {
+            traceClass += " blue";
+        };
+        return (<div>
+            <button className={traceClass} onClick={this.toggleTrace}>
+                <i className="material-icons">my_location</i>
+            </button>
+            <button className="icon-btn btn">
+                <i className="material-icons">zoom_in</i>
+            </button>
+            <button className="icon-btn btn">
+                <i className="material-icons">zoom_out</i>
+            </button>
+        </div>);
+    },
+    toggleTrace: function() {
+        var newVal = !this.state.traceActive;
+        this.setState({
+            traceActive: newVal
+        });
+        Grapher._3D.Main.traceActive = newVal;
+
+        var ele = document.getElementById("trace-info-container");
+        if (newVal) {
+            ele.setAttribute('style', 'display: block');
+        } else {
+            ele.setAttribute('style', 'display: none');
+        }
+    }
+});
+
 //Grapher.ReactComponents.EquationSidebar = <EquationSidebar />;
 Grapher.ReactComponents.EquationSidebar = ReactDOM.render(
     <EquationSidebar />,
     document.getElementById('eq-sidebar')
 );
 
-
+ReactDOM.render(
+    <Controls />,
+    document.getElementById('controls-container')
+);
 

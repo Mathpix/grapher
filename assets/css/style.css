@@ -178,13 +178,12 @@ html, body{
     border: 2px solid #777;
     padding: 3px;
 
-    display: none;
 }
 
-#controls-container a {
+#controls-container button {
     display: block;
 }
 
-#controls-container a:not(:last-child) {
+#controls-container button:not(:last-child) {
     margin-bottom: 3px;
 }
