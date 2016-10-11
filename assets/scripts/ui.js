@@ -15,6 +15,7 @@ var EquationSidebar = React.createClass({
                     addEquationCb={this.addEquation}
                     addVectorCb={this.addVector}
                     addPointCb={this.addPoint}
+                    addParametricCb={this.addParametric}
                     refreshGraphCb={this.refreshGraph}/>
                 <EquationList ref='eqList' />
             </div>
@@ -28,6 +29,10 @@ var EquationSidebar = React.createClass({
     },
     addPoint: function() {
         this.refs.eqList.addEntry('\\left(a, b, c\\right)');
+    },
+    addParametric: function() {
+        var str = '\\begin{bmatrix} x \\\\ y \\\\ z \\end{bmatrix} = \\begin{bmatrix} \\\\ \\\\ \\end{bmatrix}';
+        this.refs.eqList.addEntry(str);
     },
     refreshGraph: function() {
         var latexArr = this.getLatexEquations();
@@ -57,16 +62,16 @@ var EquationOptions = React.createClass({
                 Add
             </a>
              <ul id='add-dropdown' className='dropdown-content'>
-                <li><a href="#" onClick={this.props.addEquationCb}>Equation</a></li>
-                <li><a href="#" onClick={this.props.addVectorCb}>Vector</a></li>
-                <li><a href="#" onClick={this.props.addPointCb}>Point</a></li>
+                <li><a href="#" onClick={this.props.addEquationCb}>
+                    Equation
+                </a></li>
+                <li><a href="#" onClick={this.props.addVectorCb}>
+                    Vector
+                </a></li>
+                <li><a href="#" onClick={this.props.addPointCb}>
+                    Point
+                </a></li>
             </ul>
-            <a className="icon-btn btn" onClick={this.props.refreshGraphCb}>
-                <i className="material-icons">refresh</i>
-            </a>
-            <a className="icon-btn btn">
-                <i className="material-icons">settings</i>
-            </a>
             <a className={traceClass}
                 data-position="bottom" data-delay="50" data-tooltip="trace surface"
                 onClick={this.toggleTrace}>
@@ -160,7 +165,25 @@ var EquationList = React.createClass({
 });
 
 var EquationEntry = React.createClass({
+    getInitialState: function() {
+        return {
+            error: undefined
+        };
+    },
     render: function() {
+        var icon = undefined;
+        if (this.state.error) {
+            var err = this.state.error;
+            var icon = (
+                <i className="material-icons tooltipped"
+                data-tooltip={err.msg} data-position="right"
+                data-delay="50">{err.icon}</i>
+            );
+        } else if (this.state.success) {
+            var type = this.state.success.type;
+            var iconPath = "assets/images/icon_" + type + ".svg";
+            var icon = <img src={iconPath} />
+        }
         return (
             <div className="eq-entry">
                 <table>
@@ -168,7 +191,10 @@ var EquationEntry = React.createClass({
                     <tr>
                         <td width="15%">
                             <div className="eq-sidelabel">
-                                #{this.props.eqNumber}
+                                <span className="eq-sidelabel-num">{this.props.eqNumber}</span>
+                                <span className="eq-sidelabel-icon">
+                                    {icon}
+                                </span>
                             </div>
                         </td>
                         <td width="85%">
@@ -194,18 +220,68 @@ var EquationEntry = React.createClass({
             charsThatBreakOutOfSupSub: '+-=<>',
             autoCommands: 'pi theta sqrt',
             handlers: {
-                edit: function() {}
+                edit: this.mathEdited
             }
         });
         this.mathField.write(this.props.defaultEq);
-        console.log(this.mathField);
+        this.mathField.focus();
+    },
+    mathEdited: function() {
+        if (this.hasEdit === undefined) {
+            this.hasEdit = true;
+            return;
+        }
+
+        if (this.currentTimeout) {
+            clearTimeout(this.currentTimeout);
+        }
+
+        this.currentTimeout = setTimeout(this.editConfirmed, 0.8 * 1000);
+    },
+    editConfirmed: function() {
+        this.currentTimeout = undefined;
+
+        var latex = this.getLatex();
+        if (latex.trim() == "") {
+            Grapher._3D.removeGraph(this.getEquationId());
+            this.setState({
+                error: undefined,
+                success: undefined
+            });
+            return; // blanks are ok
+        }
+
+        var res = Grapher._3D.editGraph(
+            this.getLatex(), this.getEquationId()
+        );
+        var error = undefined;
+        var success = undefined;
+        if (res['error']) {
+            error = {
+                msg: res['error'],
+                icon: 'warning'
+            };
+        } else {
+            success = {
+                type: res['type']
+            }
+        }
+        this.setState({
+            error: error,
+            success: success
+        })
+        $('.tooltipped').tooltip();
     },
     getLatex: function() {
-        console.log("TEXT", this.mathField.text());
         return this.mathField.latex();
     },
     onDelete: function() {
+        Grapher._3D.removeGraph(this.getEquationId());
+
         this.props.deleteCb(this.props.myKey);
+    },
+    getEquationId: function() {
+        return "eq-" + this.props.myKey;
     }
 });
 

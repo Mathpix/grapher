@@ -45,8 +45,12 @@ function dimensionCallback() {
     }
 }
 
-function createLine(x0, y0, z0, x1, y1, z1) {
-    return;
+function createLine(x0, y0, z0, x1, y1, z1, mat) {
+    var geo = new THREE.Geometry();
+    geo.vertices.push(new THREE.Vector3(x0, y0, z0));
+    geo.vertices.push(new THREE.Vector3(x1, y1, z1));
+
+    return new THREE.Line(geo, mat);
 }
 
 // FUNCTIONS
@@ -88,6 +92,10 @@ function init() {
 
     _3D.Main.controls = new THREE.OrbitControls( camera, renderer.domElement );
     var controls = _3D.Main.controls;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 100;
+    controls.enableKeys = false;
+
     // LIGHT
     var light = new THREE.PointLight(0xffffff);
     light.position.set(0,250,0);
@@ -98,6 +106,60 @@ function init() {
     // SKYBOX/FOG
     // scene.fog = new THREE.FogExp2( 0x888888, 0.00025 );
 
+    var lineMat = new THREE.LineBasicMaterial({color: 0x000088});
+    for (var i = -5; i <= 5; i++) {
+        var line = createLine(i, -5, 0, i, 5, 0, lineMat);
+        scene.add(line);
+
+        var line = createLine(-5, i, 0, 5, i, 0, lineMat);
+        scene.add(line);
+    }
+
+    function cube( size ) {
+        var h = size * 0.5;
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(
+            new THREE.Vector3( -h, -h, -h ),
+            new THREE.Vector3( -h, h, -h ),
+            new THREE.Vector3( -h, h, -h ),
+            new THREE.Vector3( h, h, -h ),
+            new THREE.Vector3( h, h, -h ),
+            new THREE.Vector3( h, -h, -h ),
+            new THREE.Vector3( h, -h, -h ),
+            new THREE.Vector3( -h, -h, -h ),
+            new THREE.Vector3( -h, -h, h ),
+            new THREE.Vector3( -h, h, h ),
+            new THREE.Vector3( -h, h, h ),
+            new THREE.Vector3( h, h, h ),
+            new THREE.Vector3( h, h, h ),
+            new THREE.Vector3( h, -h, h ),
+            new THREE.Vector3( h, -h, h ),
+            new THREE.Vector3( -h, -h, h ),
+            new THREE.Vector3( -h, -h, -h ),
+            new THREE.Vector3( -h, -h, h ),
+            new THREE.Vector3( -h, h, -h ),
+            new THREE.Vector3( -h, h, h ),
+            new THREE.Vector3( h, h, -h ),
+            new THREE.Vector3( h, h, h ),
+            new THREE.Vector3( h, -h, -h ),
+            new THREE.Vector3( h, -h, h )
+         );
+        return geometry;
+    }
+
+    var geometryCube = cube( 6 );
+    geometryCube.computeLineDistances();
+    var object = new THREE.LineSegments(
+            geometryCube,
+            new THREE.LineDashedMaterial({color: 0x1111AA, dashSize: 0.2, gapSize: 0.1, linewidth: 1})
+    );
+
+    scene.add(object);
+
+    //var object = new THREE.LineSegments( geometryCube, new THREE.LineDashedMaterial( { color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } ) );
+
+
+
     ////////////
     // CUSTOM //
     ////////////
@@ -106,11 +168,6 @@ function init() {
     // wireframe for xy-plane
     var wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x000088, wireframe: true, side:THREE.DoubleSide } );
     var floorGeometry = new THREE.PlaneGeometry(10,10,10,10);
-    var floor = new THREE.Mesh(floorGeometry, wireframeMaterial);
-    floor.position.z = -0.00;
-    // rotate to lie in x-y plane
-    // floor.rotation.x = Math.PI / 2;
-    scene.add(floor);
 
     var normMaterial = new THREE.MeshNormalMaterial;
     var shadeMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
@@ -146,7 +203,6 @@ function init() {
         new THREE.SphereGeometry(0.05, 20, 20),
         redMat
     ));
-    traceSphere.add()
 
     _3D.Main.traceSphere = traceSphere;
     traceSphere.visible = false;
@@ -294,3 +350,22 @@ _3D.Main.clearSurfaces = function() {
 _3D.Main.addSurface = function(surf) {
     _3D.Main.surfaces.add(surf);
 }
+
+_3D.ParametricCurve = THREE.Curve.create(
+    function(xfunc, yfunc, zfunc, domainMin, domainMax) {
+        this.xfunc = xfunc;
+        this.yfunc = yfunc;
+        this.zfunc = zfunc;
+        this.domainMin = domainMin;
+        this.domainMax = domainMax;
+    },
+    function(t) {
+        // remap t from [0, 1] to [domainMin, domainMax]
+        var t = this.domainMin + (this.domainMax - this.domainMin)*t;
+
+        var x = this.xfunc(t),
+            y = this.yfunc(t),
+            z = this.zfunc(t);
+        return new THREE.Vector3
+    }
+);

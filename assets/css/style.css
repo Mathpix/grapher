@@ -139,6 +139,25 @@ html, body{
     color: white;
     text-align: center;
     vertical-align: middle;
+    position: relative;
+}
+
+.eq-sidelabel-num {
+    position: absolute;
+    top: 0px;
+    left: 3px;
+}
+
+.eq-sidelabel-icon i, .eq-sidelabel-icon img {
+    position: absolute;
+    top: 50%;
+    margin-top: -14px;
+    left: 50%;
+    margin-left: -11px;
+}
+
+.eq-sidelabel-icon img {
+    width: 25px;
 }
 
 #ThreeJS {
@@ -187,4 +206,24 @@ html, body{
     margin: 5px;
     padding: 2px;
     border: 2px solid #555;
+}
+
+#controls-container {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: rgba(150, 150, 150, 0.75);
+    border-radius: 5px;
+    border: 2px solid #777;
+    padding: 3px;
+
+    display: none;
+}
+
+#controls-container a {
+    display: block;
+}
+
+#controls-container a:not(:last-child) {
+    margin-bottom: 3px;
 }
