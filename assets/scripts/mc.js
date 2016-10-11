@@ -18,7 +18,7 @@ function lerp(lvl, p1, p2, v1, v2) {
 }
 
 // Creates a mesh from a the isosurface fn(x, y, z) = lvl.
-function createIsoSurface(fn, lvl, xmin, xmax, ymin, ymax,
+exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
     zmin, zmax, step) {
 
     var geo = new THREE.Geometry();

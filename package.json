@@ -20,10 +20,19 @@
     "build": "cd \"$(git rev-parse --show-cdup)\" && webpack assets/scripts/entry.js bundle.js"
   },
   "devDependencies": {
+    "babel-core": "^6.17.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-react": "^6.16.0",
+    "exports-loader": "^0.6.3",
     "webpack": "^1.13.2"
   },
   "dependencies": {
     "dat-gui": "^0.5.0",
-    "mathjs": "^3.5.3"
+    "jquery": "^2.1.1",
+    "materialize-css": "^0.97.7",
+    "mathjs": "^3.5.3",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "three": "^0.81.2"
   }
 }

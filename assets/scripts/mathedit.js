@@ -1,4 +1,6 @@
-Grapher._3D = Grapher._3D || {};
+var Grapher = require('./3d.js');
+var math = require('mathjs');
+var createIsoSurface = require('./mc.js').createIsoSurface;
 
 function processLatex(latex) {
     latex = latex.replace(/\\left/g, "");
@@ -111,6 +113,7 @@ function dograph(latex) {
 
     return {obj: obj, type: type};
 }
+exports.dograph = dograph;
 
 function extractVectorComponents(latex) {
     latex = processLatex(latex);

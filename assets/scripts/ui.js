@@ -1,4 +1,11 @@
-Grapher.ReactComponents = {};
+var React = require('react');
+var ReactDOM = require('react-dom');
+var MQ = MathQuill.getInterface(2);
+
+var Grapher = require('./3d.js');
+var dograph = require('./mathedit.js').dograph;
+
+var ReactComponents = {};
 
 var EquationSidebar = React.createClass({
     render: function() {
@@ -318,7 +325,7 @@ var Controls = React.createClass({
 });
 
 //Grapher.ReactComponents.EquationSidebar = <EquationSidebar />;
-Grapher.ReactComponents.EquationSidebar = ReactDOM.render(
+ReactComponents.EquationSidebar = ReactDOM.render(
     <EquationSidebar />,
     document.getElementById('eq-sidebar')
 );
