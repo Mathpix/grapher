@@ -156,10 +156,6 @@ function init() {
 
     scene.add(object);
 
-    //var object = new THREE.LineSegments( geometryCube, new THREE.LineDashedMaterial( { color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } ) );
-
-
-
     ////////////
     // CUSTOM //
     ////////////
@@ -187,9 +183,9 @@ function init() {
     $('#ThreeJS').mousemove(function(e) {
         var ele = container.parentNode;
         var mousePos = _3D.Main.mousePos;
-        mousePos.x = event.clientX - ele.offsetLeft;
+        mousePos.x = e.clientX - ele.offsetLeft;
         mousePos.x = (mousePos.x / ele.clientWidth) * 2 - 1;
-        mousePos.y = event.clientY - container.parentNode.offsetTop;
+        mousePos.y = e.clientY - container.parentNode.offsetTop;
         mousePos.y = -((mousePos.y / ele.clientHeight) * 2 - 1);
     })
 

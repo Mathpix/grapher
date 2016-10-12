@@ -226,3 +226,11 @@ html, body{
 #controls-container button:not(:last-child) {
     margin-bottom: 3px;
 }
+
+.eq-entry td {
+    height: 100%;
+}
+
+.eq-entry tr {
+    height: 0;
+}

@@ -2,6 +2,19 @@ var Grapher = require('./3d.js');
 var math = require('mathjs');
 var createIsoSurface = require('./mc.js').createIsoSurface;
 
+Grapher.EquationEntries = {};
+Grapher.Options = {
+    // This coefficient changes the mapping from
+    // world coordinates to coordinates used for graphing
+    // i.e. x_graph = zoomCoeff * x_world
+    zoomCoeff: 1,
+    // Resolution in xyz directions. Specifies
+    // the step size used when creating a surface.
+    xRes: 0.1,
+    yRes: 0.1,
+    zRes: 0.1
+};
+
 function processLatex(latex) {
     latex = latex.replace(/\\left/g, "");
     latex = latex.replace(/\\right/g, "");
@@ -29,6 +42,7 @@ var mathField = MQ.MathField(mathFieldEle, {
 
 Grapher._3D.editGraph = function(latex, eqId) {
     Grapher._3D.removeGraph(eqId);
+    Grapher.EquationEntries[eqId] = latex;
 
     try {
         var res = dograph(latex);
@@ -39,16 +53,22 @@ Grapher._3D.editGraph = function(latex, eqId) {
 
         return {ok: true, type: res.type};
     } catch (err) {
-        console.log(err);
         return {error: "I can't graph this"};
     }
 }
 
 Grapher._3D.removeGraph = function(eqId) {
+    delete Grapher.EquationEntries[eqId];
     Grapher._3D.Main.surfaces.children.forEach(function(s) {
         if (s.name == eqId)
             Grapher._3D.Main.surfaces.remove(s);
     });
+}
+
+Grapher._3D.refreshAll = function() {
+    for (id in Grapher.EquationEntries) {
+        Grapher._3D.editGraph(Grapher.EquationEntries[id], id);
+    }
 }
 
 function dograph(latex) {
@@ -62,7 +82,8 @@ function dograph(latex) {
             v2 = math.eval(vecComponents[1]),
             v3 = math.eval(vecComponents[2]);
 
-        var vec = new THREE.Vector3(v1, v2, v3);
+        var vec = new THREE.Vector3(v1, v2, v3).divideScalar(Grapher.Options.zoomCoeff);
+
         var norm = vec.length();
         vec.normalize();
         var color = new THREE.Color().setHSL(Math.random(), 1, 0.5);
@@ -82,6 +103,7 @@ function dograph(latex) {
         var mat = new THREE.MeshBasicMaterial({color: 0x0000FF});
         var dot = new THREE.Mesh(geo, mat);
         dot.position.set(v1, v2, v3);
+        dot.position.divideScalar(Grapher.Options.zoomCoeff);
 
         obj = dot;
         type = 'point';
@@ -102,7 +124,12 @@ function dograph(latex) {
         }
 
         console.log("Starting isosurface creation");
-        var geo = createIsoSurface(f, 0, -3, 3, -3, 3, -3, 3, 0.1);
+        var zc = Grapher.Options.zoomCoeff;
+        var geo = createIsoSurface(
+            f, 0,
+            -3, 3, -3, 3, -3, 3,
+            0.1, zc
+        );
         console.log("Finished isosurface creation");
         var mat = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
         var mesh = new THREE.Mesh(geo, mat);

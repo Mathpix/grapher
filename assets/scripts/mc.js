@@ -11,15 +11,12 @@ function lerp(lvl, p1, p2, v1, v2) {
         return p1;
 
     var interp = p1 + (lvl - v1)*(p2 - p1)/(v2 - v1);
-    if (interp > p2) {
-        console.log("WTF", v1, v2);
-    }
     return interp;
 }
 
 // Creates a mesh from a the isosurface fn(x, y, z) = lvl.
 exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
-    zmin, zmax, step) {
+    zmin, zmax, step, zc) {
 
     var geo = new THREE.Geometry();
     var totalVertexIdx = 0;
@@ -30,14 +27,14 @@ exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
     for (var x = xmin; x < xmax; x += step) {
         for (var y = ymin; y < ymax; y += step) {
             for (var z = zmin; z < zmax; z += step) {
-                var v0 = fn(x,y,z),
-                    v1 = fn(x,y+step,z),
-                    v2 = fn(x+step,y+step,z),
-                    v3 = fn(x+step,y,z),
-                    v4 = fn(x,y,z+step),
-                    v5 = fn(x,y+step,z+step),
-                    v6 = fn(x+step,y+step,z+step),
-                    v7 = fn(x+step,y,z+step);
+                var v0 = fn(zc*x,zc*y,zc*z),
+                    v1 = fn(zc*x,zc*(y+step),zc*z),
+                    v2 = fn(zc*(x+step),zc*(y+step),zc*z),
+                    v3 = fn(zc*(x+step),zc*y,zc*z),
+                    v4 = fn(zc*x,zc*y,zc*(z+step)),
+                    v5 = fn(zc*x,zc*(y+step),zc*(z+step)),
+                    v6 = fn(zc*(x+step),zc*(y+step),zc*(z+step)),
+                    v7 = fn(zc*(x+step),zc*y,zc*(z+step));
 
                 var idx = 0;
                 if (v0 < lvl) idx |= 1;

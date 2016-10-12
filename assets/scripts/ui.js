@@ -3,6 +3,7 @@ var ReactDOM = require('react-dom');
 var MQ = MathQuill.getInterface(2);
 
 var Grapher = require('./3d.js');
+window.Grapher = Grapher;
 var dograph = require('./mathedit.js').dograph;
 
 var ReactComponents = {};
@@ -262,21 +263,26 @@ var Controls = React.createClass({
         }
     },
     render: function() {
-        var traceClass = "icon-btn btn";
+        var traceClass = "icon-btn btn tooltipped";
         if (this.state.traceActive) {
             traceClass += " blue";
         };
         return (<div>
-            <button className={traceClass} onClick={this.toggleTrace}>
+            <button className={traceClass} onClick={this.toggleTrace}
+            data-tooltip="Trace Surface" data-position="right"
+            data-delay="50">
                 <i className="material-icons">my_location</i>
             </button>
-            <button className="icon-btn btn">
+            <button className="icon-btn btn" onClick={this.zoomIn}>
                 <i className="material-icons">zoom_in</i>
             </button>
-            <button className="icon-btn btn">
+            <button className="icon-btn btn" onClick={this.zoomOut}>
                 <i className="material-icons">zoom_out</i>
             </button>
         </div>);
+    },
+    componentDidMount: function() {
+        $('.tooltipped').tooltip();
     },
     toggleTrace: function() {
         var newVal = !this.state.traceActive;
@@ -291,6 +297,14 @@ var Controls = React.createClass({
         } else {
             ele.setAttribute('style', 'display: none');
         }
+    },
+    zoomIn: function() {
+        Grapher.Options.zoomCoeff /= 2;
+        Grapher._3D.refreshAll();
+    },
+    zoomOut: function() {
+        Grapher.Options.zoomCoeff *= 2;
+        Grapher._3D.refreshAll();
     }
 });
 
