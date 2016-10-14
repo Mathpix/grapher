@@ -17,7 +17,7 @@
   },
   "homepage": "http://grapher.mathpix.com",
   "scripts": {
-    "build": "cd \"$(git rev-parse --show-cdup)\" && webpack assets/scripts/entry.js bundle.js"
+    "build": "cd \"$(git rev-parse --show-cdup)\" && webpack js/entry.js bundle.js"
   },
   "devDependencies": {
     "babel-core": "^6.17.0",
