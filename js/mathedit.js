@@ -1,5 +1,6 @@
 var Grapher = require('./3d.js');
 var math = require('mathjs');
+var CustomArrow = require('./CustomArrow.js');
 var createIsoSurface = require('./mc.js').createIsoSurface;
 
 Grapher.EquationEntries = {};
@@ -87,7 +88,7 @@ function dograph(latex) {
         var norm = vec.length();
         vec.normalize();
         var color = new THREE.Color().setHSL(Math.random(), 1, 0.5);
-        var arrow = new THREE.ArrowHelper(
+        var arrow = new CustomArrow(
             vec, new THREE.Vector3(0, 0, 0), norm,
             color, undefined, 0.25, norm / 15.0
         );

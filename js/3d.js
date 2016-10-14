@@ -1,6 +1,8 @@
 var Detector = require('three/examples/js/Detector.js');
 var WindowResize = require('exports?THREEx.WindowResize!./vendor/THREEx.WindowResize.js');
 
+var CustomArrow = require('./CustomArrow.js');
+
 var _3D = exports._3D = {};
 
 _3D.Main = {
@@ -240,17 +242,17 @@ function createAxesWindow() {
 
     //axesAxisHelper = new THREE.AxisHelper(100);
     //axesScene.add(axesAxisHelper);
-    var xAxis = new THREE.ArrowHelper(
+    var xAxis = new CustomArrow(
         new THREE.Vector3(1, 0, 0),
         new THREE.Vector3(0, 0, 0),
         100, 0xFF0000, undefined, 10
     );
-    var yAxis = new THREE.ArrowHelper(
+    var yAxis = new CustomArrow(
         new THREE.Vector3(0, 1, 0),
         new THREE.Vector3(0, 0, 0),
         100, 0x00FF00, undefined, 10
     );
-    var zAxis = new THREE.ArrowHelper(
+    var zAxis = new CustomArrow(
         new THREE.Vector3(0, 0, 1),
         new THREE.Vector3(0, 0, 0),
         100, 0x0000FF, undefined, 10
