@@ -136,6 +136,7 @@ html, body{
     background-color: #00bfad;
     height: 100%;
     width: 100%;
+    min-width: 40px;
     color: white;
     text-align: center;
     vertical-align: middle;
