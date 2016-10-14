@@ -1,0 +1,12 @@
+# CircleCI insists on tests
+test:
+  override:
+    - echo No tests
+
+# based on https://circleci.com/docs/continuous-deployment-with-amazon-s3/
+deployment:
+  prod:
+    branch: master
+    commands:
+      - npm run build -- --optimize-minimize
+      - npm run deploy

@@ -17,7 +17,8 @@
   },
   "homepage": "http://grapher.mathpix.com",
   "scripts": {
-    "build": "cd \"$(git rev-parse --show-cdup)\" && webpack js/entry.js bundle.js"
+    "build": "cd \"$(git rev-parse --show-cdup)\" && webpack js/entry.js bundle.js",
+    "deploy": "{ test -r bundle.js || echo 'Missing bundle.js'; } && aws s3 sync . s3://grapher.mathpix.com/ --delete --exclude '*' --include index.html --include bundle.js --include 'assets/*'"
   },
   "devDependencies": {
     "babel-core": "^6.17.0",
