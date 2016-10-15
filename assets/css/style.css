@@ -235,3 +235,8 @@ html, body{
 .eq-entry tr {
     height: 0;
 }
+
+.mathpix-logo img {
+  height: 35px;
+  vertical-align: middle;
+}
