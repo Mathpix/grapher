@@ -63,12 +63,79 @@ var EquationOptions = React.createClass({
                     Point
                 </a></li>
             </ul>
+            <div className="right">
+                <a href="#settings-modal" className="btn modal-trigger">
+                    <i className="material-icons">settings</i>
+                </a>
+            </div>
+            <SettingsModal/>
         </div>
         );
     },
     componentDidMount: function() {
         $('.dropdown-button').dropdown();
         $('.tooltipped').tooltip();
+        $('.modal-trigger').leanModal();
+    }
+});
+
+var SettingsModal = React.createClass({
+    getInitialState: function() {
+        return {
+            backgroundColor: '#888888'
+        }
+    },
+    render: function() {
+        var settings = (
+            <p>
+                <input type="color" onInput={this.colorChange}
+                ref="bg_color" defaultValue="#888888" id="background-picker"></input>
+                <label htmlFor="thingy">Background Color</label>
+
+                <br />
+
+                <input type="checkbox" className="filled-in" id="grid-checkbox"
+                defaultChecked="checked" onChange={this.toggleGrid} ref="gridCheckbox" />
+                <label htmlFor="grid-checkbox">Show Grid</label>
+
+                <br />
+
+                <input type="checkbox" className="filled-in" id="box-checkbox"
+                defaultChecked="checked" onChange={this.toggleBox} ref="boxCheckbox" />
+                <label htmlFor="box-checkbox">Show Box</label>
+            </p>
+        );
+        return (
+            <div id="settings-modal" className="modal">
+                <div className="modal-content">
+                    <h4>Settings</h4>
+
+                    {settings}
+                </div>
+                <div className="modal-footer">
+                    <a href="#!" className="modal-action modal-close btn">
+                        Close
+                    </a>
+                </div>
+            </div>
+        );
+    },
+    colorChange: function() {
+        var bg = this.refs.bg_color.value;
+
+        var s = this.state;
+        s.backgroundColor = s;
+        this.setState(s);
+
+        Grapher._3D.Main.renderer.setClearColor(bg, 1);
+    },
+    toggleGrid: function(event) {
+        var checked = this.refs.gridCheckbox.checked;
+        Grapher._3D.Main.grid.visible = checked;
+    },
+    toggleBox: function(event) {
+        var checked = this.refs.boxCheckbox.checked;
+        Grapher._3D.Main.boxLines.visible = checked;
     }
 });
 
@@ -245,6 +312,9 @@ var EquationEntry = React.createClass({
     },
     getLatex: function() {
         return this.mathField.latex();
+    },
+    getText: function() {
+        return this.mathField.text();
     },
     onDelete: function() {
         Grapher._3D.removeGraph(this.getEquationId());

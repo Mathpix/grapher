@@ -218,9 +218,8 @@ html, body{
     left: 5px;
     background-color: rgba(150, 150, 150, 0.75);
     border-radius: 5px;
-    border: 2px solid #777;
     padding: 3px;
-
+    box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 5px;
 }
 
 #controls-container button {
@@ -242,4 +241,25 @@ html, body{
 .mathpix-logo img {
   height: 35px;
   vertical-align: middle;
+}
+
+input[type="color"] + label {
+  position: relative;
+  padding-left: 15px;
+  display: inline-block;
+  height: 25px;
+  line-height: 25px;
+  font-size: 1rem;
+  -webkit-user-select: none;
+}
+
+#background-picker {
+  height: 32px;
+  width: 45px;
+  margin: 0;
+  background-color: transparent;
+  border: none;
+  vertical-align: middle;
+  margin-left: -4px;
+  cursor: pointer;
 }

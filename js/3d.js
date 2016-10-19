@@ -12,7 +12,9 @@ _3D.Main = {
     renderer:   undefined,
     controls:   undefined,
     surfaces:   undefined,
-    traceActive: false
+    traceActive: false,
+    boxLines: undefined,
+    grid: undefined
 };
 
 var container, scene, camera, renderer, controls;
@@ -108,14 +110,18 @@ function init() {
     // SKYBOX/FOG
     // scene.fog = new THREE.FogExp2( 0x888888, 0.00025 );
 
+    var gridObj = new THREE.Object3D();
     var lineMat = new THREE.LineBasicMaterial({color: 0x000088});
     for (var i = -5; i <= 5; i++) {
         var line = createLine(i, -5, 0, i, 5, 0, lineMat);
-        scene.add(line);
+        gridObj.add(line);
 
         var line = createLine(-5, i, 0, 5, i, 0, lineMat);
-        scene.add(line);
+        gridObj.add(line);
     }
+    scene.add(gridObj);
+    _3D.Main.grid = gridObj;
+
 
     function cube( size ) {
         var h = size * 0.5;
@@ -155,7 +161,7 @@ function init() {
             geometryCube,
             new THREE.LineDashedMaterial({color: 0x1111AA, dashSize: 0.2, gapSize: 0.1, linewidth: 1})
     );
-
+    _3D.Main.boxLines = object;
     scene.add(object);
 
     ////////////
