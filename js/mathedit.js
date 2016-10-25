@@ -30,6 +30,48 @@ function processLatex(latex) {
     return latex;
 }
 
+function processText(text) {
+    text = text.replace(/\\s\*i\*n \*/g, "sin");
+    text = text.replace(/\\c\*o\*s \*/g, "cos");
+    text = text.replace(/\\t\*a\*n \*/g, "tan");
+
+    text = text.replace(/\\s\*e\*c \*/g, "sec");
+    text = text.replace(/\\c\*s\*c \*/g, "csc");
+    text = text.replace(/\\c\*o\*t \*/g, "cot");
+
+    text = text.replace(/\\m\*a\*x \*/g, "max");
+    text = text.replace(/\\m\*i\*n \*/g, "min");
+
+    text = text.replace(/\\a\*b\*s \*/g, "abs");
+
+    text = text.replace(/\\e\*x\*p \*/g, "exp");
+
+    text = text.replace(/\\l\*n \*/g, "ln");
+    text = text.replace(/\\l\*o\*g \*/g, "log");
+
+    text = text.replace(/\\operatorname\{(.*?)\}\*/g, function(_, m) {
+        return m.replace(/\*/g, "");
+    });
+
+    text = text.replace(/([a-zA-Z])\*,/g, "$1,");
+
+    return text;
+}
+
+function getVariables(eqStr) {
+    var expr = math.parse(eqStr);
+
+    var variables = [];
+
+    expr.traverse(function(node) {
+        if (node.type == 'SymbolNode') {
+            variables.push(node.name);
+        }
+    });
+
+    return variables;
+}
+
 var MQ = MathQuill.getInterface(2);
 
 var mathFieldEle = document.querySelector(".eq-input");
@@ -41,12 +83,15 @@ var mathField = MQ.MathField(mathFieldEle, {
     }
 })
 
-Grapher._3D.editGraph = function(latex, eqId) {
+Grapher._3D.editGraph = function(latex, text, eqId) {
     Grapher._3D.removeGraph(eqId);
-    Grapher.EquationEntries[eqId] = latex;
+    Grapher.EquationEntries[eqId] = {
+        latex: latex,
+        text: text
+    };
 
     try {
-        var res = dograph(latex);
+        var res = dograph(latex, text);
         var obj = res.obj;
         obj = res.obj;
         obj.name = eqId;
@@ -54,6 +99,7 @@ Grapher._3D.editGraph = function(latex, eqId) {
 
         return {ok: true, type: res.type};
     } catch (err) {
+        console.log(err);
         return {error: "I can't graph this"};
     }
 }
@@ -68,16 +114,18 @@ Grapher._3D.removeGraph = function(eqId) {
 
 Grapher._3D.refreshAll = function() {
     for (id in Grapher.EquationEntries) {
-        Grapher._3D.editGraph(Grapher.EquationEntries[id], id);
+        var latex = Grapher.EquationEntries[id].latex;
+        var text = Grapher.EquationEntries[id].text;
+        Grapher._3D.editGraph(latex, text, id);
     }
 }
 
-function dograph(latex) {
+function dograph(latex, text) {
     var obj;
     var type;
 
     var vecComponents = extractVectorComponents(latex);
-    var pointComponents = extractPointComponents(latex);
+    var pointComponents = extractPointComponents(text);
     if (vecComponents) {
         var v1 = math.eval(vecComponents[0]),
             v2 = math.eval(vecComponents[1]),
@@ -90,7 +138,7 @@ function dograph(latex) {
         var color = new THREE.Color().setHSL(Math.random(), 1, 0.5);
         var arrow = new CustomArrow(
             vec, new THREE.Vector3(0, 0, 0), norm,
-            color, undefined, 0.25, norm / 15.0
+            color, undefined, 0.25, 5.0
         );
 
         obj = arrow;
@@ -109,7 +157,8 @@ function dograph(latex) {
         obj = dot;
         type = 'point';
     } else {
-        var eq = processLatex(latex);
+        var eq = processText(text);
+        console.log(eq);
         var parts = eq.split("=");
         if (parts.length != 2) return;
 
@@ -124,6 +173,7 @@ function dograph(latex) {
             });
         }
 
+        var d = new Date();
         console.log("Starting isosurface creation");
         var zc = Grapher.Options.zoomCoeff;
         var geo = createIsoSurface(
@@ -131,7 +181,7 @@ function dograph(latex) {
             -3, 3, -3, 3, -3, 3,
             0.1, zc
         );
-        console.log("Finished isosurface creation");
+        console.log("Finished isosurface creation", new Date() - d);
         var mat = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
         var mesh = new THREE.Mesh(geo, mat);
 
@@ -154,13 +204,15 @@ function extractVectorComponents(latex) {
     }
 }
 
-function extractPointComponents(latex) {
-    latex = processLatex(latex);
+function extractPointComponents(text) {
+    text = processText(text);
     var regex = /^\((.*?)\s*,\s*(.*?)\s*,\s*(.*?)\)$/;
-    var matches = regex.exec(latex);
+    var matches = regex.exec(text);
     if (matches == null) {
         return null
     } else {
         return matches.slice(1);
     }
 }
+
+function extractParametricComponents() {}

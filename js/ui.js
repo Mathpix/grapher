@@ -16,8 +16,7 @@ var EquationSidebar = React.createClass({
                     addEquationCb={this.addEquation}
                     addVectorCb={this.addVector}
                     addPointCb={this.addPoint}
-                    addParametricCb={this.addParametric}
-                    refreshGraphCb={this.refreshGraph}/>
+                    addParametricCb={this.addParametric} />
                 <EquationList ref='eqList' />
             </div>
         );
@@ -35,12 +34,8 @@ var EquationSidebar = React.createClass({
         var str = '\\begin{bmatrix} x \\\\ y \\\\ z \\end{bmatrix} = \\begin{bmatrix} \\\\ \\\\ \\end{bmatrix}';
         this.refs.eqList.addEntry(str);
     },
-    refreshGraph: function() {
-        var latexArr = this.getLatexEquations();
-        dograph(latexArr);
-    },
-    getLatexEquations: function() {
-        return this.refs.eqList.getLatexEquations();
+    getEquationData: function() {
+        return this.refs.eqList.getEquationData();
     }
 })
 
@@ -53,13 +48,13 @@ var EquationOptions = React.createClass({
                 Add
             </a>
              <ul id='add-dropdown' className='dropdown-content'>
-                <li><a href="#" onClick={this.props.addEquationCb}>
+                <li><a onClick={this.props.addEquationCb}>
                     Equation
                 </a></li>
-                <li><a href="#" onClick={this.props.addVectorCb}>
+                <li><a onClick={this.props.addVectorCb}>
                     Vector
                 </a></li>
-                <li><a href="#" onClick={this.props.addPointCb}>
+                <li><a onClick={this.props.addPointCb}>
                     Point
                 </a></li>
             </ul>
@@ -192,13 +187,17 @@ var EquationList = React.createClass({
             numEqs: numEqs
         });
     },
-    getLatexEquations: function() {
-        var arr = [];
+    getEquationData: function() {
+        var data = {
+            latex: [],
+            text: []
+        }
         for (var i = 0; i < this.state.eqs.length; i++) {
             var entry = this.refs['child_'+i];
-            arr.push(entry.getLatex());
+            data.latex.push(entry.getLatex());
+            data.text.push(entry.getText());
         }
-        return arr;
+        return data;
     }
 });
 
@@ -257,6 +256,8 @@ var EquationEntry = React.createClass({
             spaceBehavesLikeTab: true,
             charsThatBreakOutOfSupSub: '+-=<>',
             autoCommands: 'pi theta sqrt',
+            autoOperatorNames: 'sin cos tan csc sec cot sinh cosh tanh csch sech coth ' +
+                'ln log max min sign abs exp round floor ceil mod',
             handlers: {
                 edit: this.mathEdited
             }
@@ -290,7 +291,7 @@ var EquationEntry = React.createClass({
         }
 
         var res = Grapher._3D.editGraph(
-            this.getLatex(), this.getEquationId()
+            this.getLatex(), this.getText(), this.getEquationId()
         );
         var error = undefined;
         var success = undefined;
