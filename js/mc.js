@@ -27,14 +27,22 @@ exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
     for (var x = xmin; x < xmax; x += step) {
         for (var y = ymin; y < ymax; y += step) {
             for (var z = zmin; z < zmax; z += step) {
-                var v0 = fn(zc*x,zc*y,zc*z),
-                    v1 = fn(zc*x,zc*(y+step),zc*z),
-                    v2 = fn(zc*(x+step),zc*(y+step),zc*z),
-                    v3 = fn(zc*(x+step),zc*y,zc*z),
-                    v4 = fn(zc*x,zc*y,zc*(z+step)),
-                    v5 = fn(zc*x,zc*(y+step),zc*(z+step)),
-                    v6 = fn(zc*(x+step),zc*(y+step),zc*(z+step)),
-                    v7 = fn(zc*(x+step),zc*y,zc*(z+step));
+                var v0 = fn(zc*x,zc*y,zc*z);
+                if (isNaN(v0)) continue;
+                var v1 = fn(zc*x,zc*(y+step),zc*z);
+                if (isNaN(v1)) continue;
+                var v2 = fn(zc*(x+step),zc*(y+step),zc*z);
+                if (isNaN(v2)) continue;
+                var v3 = fn(zc*(x+step),zc*y,zc*z);
+                if (isNaN(v3)) continue;
+                var v4 = fn(zc*x,zc*y,zc*(z+step));
+                if (isNaN(v4)) continue;
+                var v5 = fn(zc*x,zc*(y+step),zc*(z+step));
+                if (isNaN(v5)) continue;
+                var v6 = fn(zc*(x+step),zc*(y+step),zc*(z+step));
+                if (isNaN(v1)) continue;
+                var v7 = fn(zc*(x+step),zc*y,zc*(z+step));
+                if (isNaN(v7)) continue;
 
                 var idx = 0;
                 if (v0 < lvl) idx |= 1;
@@ -129,9 +137,13 @@ exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
                         idxB = edgeCombos[i+1],
                         idxC = edgeCombos[i+2];
 
-                    geo.vertices.push(eVerts[idxA].clone());
-                    geo.vertices.push(eVerts[idxB].clone());
-                    geo.vertices.push(eVerts[idxC].clone());
+                    //geo.vertices.push(eVerts[idxA].clone());
+                    //geo.vertices.push(eVerts[idxB].clone());
+                    //geo.vertices.push(eVerts[idxC].clone());
+
+                    geo.vertices.push(eVerts[idxA]);
+                    geo.vertices.push(eVerts[idxB]);
+                    geo.vertices.push(eVerts[idxC]);
 
                     var face = new THREE.Face3(totalVertexIdx, totalVertexIdx+1, totalVertexIdx+2);
                     geo.faces.push(face);
