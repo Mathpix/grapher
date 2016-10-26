@@ -21,19 +21,22 @@ exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
     var geo = new THREE.Geometry();
     var totalVertexIdx = 0;
 
-    var edgePts = new Array(12);
-    var vIdxLookup = new Array(12);
     var eVerts = new Array(12);
+
     for (var x = xmin; x < xmax; x += step) {
         for (var y = ymin; y < ymax; y += step) {
+            var v4 = fn(zc*x,zc*y,zc*zmin);
+            var v5 = fn(zc*x,zc*(y+step),zc*zmin);
+            var v6 = fn(zc*(x+step),zc*(y+step),zc*zmin);
+            var v7 = fn(zc*(x+step),zc*y,zc*zmin);
             for (var z = zmin; z < zmax; z += step) {
-                var v0 = fn(zc*x,zc*y,zc*z);
+                var v0 = v4;
                 if (isNaN(v0)) continue;
-                var v1 = fn(zc*x,zc*(y+step),zc*z);
+                var v1 = v5;
                 if (isNaN(v1)) continue;
-                var v2 = fn(zc*(x+step),zc*(y+step),zc*z);
+                var v2 = v6;
                 if (isNaN(v2)) continue;
-                var v3 = fn(zc*(x+step),zc*y,zc*z);
+                var v3 = v7;
                 if (isNaN(v3)) continue;
                 var v4 = fn(zc*x,zc*y,zc*(z+step));
                 if (isNaN(v4)) continue;
@@ -59,76 +62,39 @@ exports.createIsoSurface = function(fn, lvl, xmin, xmax, ymin, ymax,
                     continue;
                 if (edges & 1) { // edge 0
                     eVerts[0] = new THREE.Vector3(x, lerp(lvl,y,y+step,v0,v1), z);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-                    //vIdxLookup[0] = totalVertexIdx++;
                 }
                 if (edges & 2) { // edge 1
                     eVerts[1] = new THREE.Vector3(lerp(lvl,x,x+step,v1,v2), y+step, z);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[1] = totalVertexIdx++;
                 }
                 if (edges & 4) { // edge 2
                     eVerts[2] = new THREE.Vector3(x+step, lerp(lvl,y,y+step,v3,v2), z);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-                    //vIdxLookup[2] = totalVertexIdx++;
                 }
                 if (edges & 8) { // edge 3
                     eVerts[3] = new THREE.Vector3(lerp(lvl,x,x+step,v0,v3), y, z);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[3] = totalVertexIdx++;
                 }
                 if (edges & 16) { // edge 4
                     eVerts[4] = new THREE.Vector3(x, lerp(lvl,y,y+step,v4,v5), z+step);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[4] = totalVertexIdx++;
                 }
                 if (edges & 32) { // edge 5
                     eVerts[5] = new THREE.Vector3(lerp(lvl,x,x+step,v5,v6), y+step, z+step);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[5] = totalVertexIdx++;
                 }
                 if (edges & 64) { // edge 6
                     eVerts[6] = new THREE.Vector3(x+step, lerp(lvl,y,y+step,v7,v6), z+step);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[6] = totalVertexIdx++;
                 }
-                if (edges & 128) { // edge 7 <<<<<<<<<BAD>>>>>>>>>>
+                if (edges & 128) { // edge 7
                     eVerts[7] = new THREE.Vector3(lerp(lvl,x,x+step,v4,v7), y, z+step);
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[7] = totalVertexIdx++;
                 }
                 if (edges & 256) { // edge 8
                     eVerts[8] = new THREE.Vector3(x, y, lerp(lvl,z,z+step,v0,v4));
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[8] = totalVertexIdx++;
                 }
                 if (edges & 512) { // edge 9
                     eVerts[9] = new THREE.Vector3(x, y+step, lerp(lvl,z,z+step,v1,v5));
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[9] = totalVertexIdx++;
                 }
                 if (edges & 1024) { // edge 10
                     eVerts[10] = new THREE.Vector3(x+step, y+step, lerp(lvl,z,z+step,v2,v6));
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //vIdxLookup[10] = totalVertexIdx++;
                 }
-                if (edges & 2048) { // edge 11 <<<<<<<<<<<<BAD>>>>>>>>
+                if (edges & 2048) { // edge 11
                     eVerts[11] = new THREE.Vector3(x+step, y, lerp(lvl,z,z+step,v3,v7));
-                    //geo.vertices.push(new THREE.Vector3(x, y, z));
-
-                    //console.log(Math.pow(x+step/2, 2) + Math.pow(y+step/2, 2) + Math.pow(z+step/2,2));
-                    //if (Math.abs(geo.vertices[totalVertexIdx].length()-1)>0.1)console.log("NO GOOD");
-
-                    //vIdxLookup[11] = totalVertexIdx++;
                 }
 
                 var edgeCombos = triTable[idx];
