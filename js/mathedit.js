@@ -25,6 +25,8 @@ function processLatex(latex) {
     latex = latex.replace(/\\log/g, "log");
     latex = latex.replace(/\\ln/g, "log");
     latex = latex.replace(/\\pi/g, "pi ");
+    latex = latex.replace(/\\cdot/g, "*");
+    latex = latex.replace(/\\operatorname\{abs\}/g, "abs");
     latex = latex.replace(/\^{(.*?)}/g, "^($1)");
 
     return latex;
@@ -126,7 +128,79 @@ function dograph(latex, text) {
 
     var vecComponents = extractVectorComponents(latex);
     var pointComponents = extractPointComponents(text);
-    if (vecComponents) {
+    var parametricComponents = extractParametricComponents(latex);
+
+    var paramMode = undefined;
+    if (parametricComponents) {
+        var arr = parametricComponents;
+        if (arr[0] == 'x' && arr[1] == 'y' && arr[2] == 'z') {
+            paramMode = 'rectangular';
+        } else if (arr[0] == 'r' && arr[1] == '\\theta' && arr[2] == 'z') {
+            paramMode = 'cylindrical';
+        }
+    }
+    console.log("parametric mode", paramMode);
+    var vfComponents = extractVFComponents(latex);
+        if (parametricComponents && paramMode !== undefined) {
+        var xComp = math.compile(parametricComponents[3]);
+        var yComp = math.compile(parametricComponents[4]);
+        var zComp = math.compile(parametricComponents[5]);
+
+        var zc = Grapher.Options.zoomCoeff;
+        var Parametric = THREE.Curve.create(
+            function() {},
+            function(t) {
+                var x = xComp.eval({t: t/zc});
+                var y = yComp.eval({t: t/zc});
+                var z = zComp.eval({t: t/zc});
+                if (paramMode == 'cylindrical') {
+                    var xNew = x * Math.cos(y);
+                    var yNew = x * Math.sin(y);
+                    x = xNew;
+                    y = yNew;
+                }
+                return new THREE.Vector3(x/zc, y/zc, z/zc);
+            }
+        );
+
+        var curve = new Parametric();
+        console.log(curve.getTangentAt);
+        var geo = new THREE.TubeGeometry(curve, 300, 0.04, 9, false);
+        var mesh = new THREE.Mesh(geo, new THREE.MeshNormalMaterial({side: THREE.DoubleSide}));
+
+        obj = mesh;
+        type = 'parametric';
+    } else if (vfComponents) {
+        obj = new THREE.Object3D();
+        var xComp = math.compile(vfComponents[0]);
+        var yComp = math.compile(vfComponents[1]);
+        var zComp = math.compile(vfComponents[2]);
+
+        var zc = Grapher.Options.zoomCoeff;
+        for (var x = -3; x <= 3; x += 1) {
+            for (var y = -3; y <= 3; y += 1) {
+                for (var z = -3; z <= 3; z += 1) {
+                    var ctx = {x:zc*x, y:zc*y, z:zc*z};
+                    var vecX = xComp.eval(ctx);
+                    var vecY = yComp.eval(ctx);
+                    var vecZ = zComp.eval(ctx);
+
+                    var vec = new THREE.Vector3(vecX, vecY, vecZ);
+                    var len = vec.length();
+                    if (len == 0) continue;
+                    vec.normalize();
+                    var color = new THREE.Color().setHSL(Math.abs(len-5)/10.0, 1, 0.5);
+                    var arrow = new CustomArrow(
+                        vec, new THREE.Vector3(x,y,z), 1,
+                        color, undefined, 0.25, 5
+                    );
+                    obj.add(arrow);
+                }
+            }
+        }
+
+        type = 'vectorfield';
+    } else if (vecComponents) {
         var v1 = math.eval(vecComponents[0]),
             v2 = math.eval(vecComponents[1]),
             v3 = math.eval(vecComponents[2]);
@@ -158,20 +232,21 @@ function dograph(latex, text) {
         type = 'point';
     } else {
         var eq = processText(text);
-        console.log(eq);
         var parts = eq.split("=");
         if (parts.length != 2) return;
 
         var eq = parts[0] + "-(" + parts[1] + ")";
         var expr = math.compile(eq);
 
-        var f = function(x, y, z) {
+        var _f = function(x, y, z) {
             return expr.eval({
                 x: x,
                 y: y,
                 z: z
             });
-        }
+        };
+
+        var f = _f;
 
         var d = new Date();
         console.log("Starting isosurface creation");
@@ -215,4 +290,25 @@ function extractPointComponents(text) {
     }
 }
 
-function extractParametricComponents() {}
+function extractParametricComponents(latex) {
+    latex = processLatex(latex)
+    var regex = /^\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}=\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
+    var matches = regex.exec(latex);
+    if (matches == null) {
+        return null;
+    } else {
+        return matches.slice(1);
+    }
+}
+
+function extractVFComponents(latex) {
+    latex = processLatex(latex);
+    var regex = /^\\nabla\\begin{bmatrix}x\\\\y\\\\z\\end{bmatrix}=\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
+    var matches = regex.exec(latex);
+    if (matches == null) {
+        return null;
+    } else {
+        console.log("GOOD VF", matches.slice(1));
+        return matches.slice(1);
+    }
+}

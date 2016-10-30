@@ -16,7 +16,8 @@ var EquationSidebar = React.createClass({
                     addEquationCb={this.addEquation}
                     addVectorCb={this.addVector}
                     addPointCb={this.addPoint}
-                    addParametricCb={this.addParametric} />
+                    addParametricCb={this.addParametric}
+                    addVectorFieldCb={this.addVectorField} />
                 <EquationList ref='eqList' />
             </div>
         );
@@ -32,6 +33,10 @@ var EquationSidebar = React.createClass({
     },
     addParametric: function() {
         var str = '\\begin{bmatrix} x \\\\ y \\\\ z \\end{bmatrix} = \\begin{bmatrix} \\\\ \\\\ \\end{bmatrix}';
+        this.refs.eqList.addEntry(str);
+    },
+    addVectorField: function() {
+        var str = '\\nabla \\begin{bmatrix} x \\\\ y \\\\ z \\end{bmatrix} = \\begin{bmatrix} \\\\ \\\\ \\end{bmatrix}';
         this.refs.eqList.addEntry(str);
     },
     getEquationData: function() {
@@ -56,6 +61,12 @@ var EquationOptions = React.createClass({
                 </a></li>
                 <li><a onClick={this.props.addPointCb}>
                     Point
+                </a></li>
+                <li><a onClick={this.props.addParametricCb}>
+                    Parametric
+                </a></li>
+                <li><a onClick={this.props.addVectorFieldCb}>
+                    Vector Field
                 </a></li>
             </ul>
             <div className="right">
