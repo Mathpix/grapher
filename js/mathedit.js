@@ -303,7 +303,7 @@ function extractParametricComponents(latex) {
 
 function extractVFComponents(latex) {
     latex = processLatex(latex);
-    var regex = /^\\nabla\\begin{bmatrix}x\\\\y\\\\z\\end{bmatrix}=\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
+    var regex = /^\\Delta\\begin{bmatrix}x\\\\y\\\\z\\end{bmatrix}=\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
     var matches = regex.exec(latex);
     if (matches == null) {
         return null;

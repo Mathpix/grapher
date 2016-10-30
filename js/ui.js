@@ -36,7 +36,7 @@ var EquationSidebar = React.createClass({
         this.refs.eqList.addEntry(str);
     },
     addVectorField: function() {
-        var str = '\\nabla \\begin{bmatrix} x \\\\ y \\\\ z \\end{bmatrix} = \\begin{bmatrix} \\\\ \\\\ \\end{bmatrix}';
+        var str = '\\Delta \\begin{bmatrix} x \\\\ y \\\\ z \\end{bmatrix} = \\begin{bmatrix} \\\\ \\\\ \\end{bmatrix}';
         this.refs.eqList.addEntry(str);
     },
     getEquationData: function() {
