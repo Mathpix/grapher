@@ -152,6 +152,9 @@ var EquationList = React.createClass({
             numEqs: 1
         };
     },
+    componentDidMount: function() {
+      window.setLatexList = this.setLatexList;
+    },
     render: function() {
         var d = this.deleteEntry; // scope hax
         var i = 0;
@@ -209,6 +212,19 @@ var EquationList = React.createClass({
             data.text.push(entry.getText());
         }
         return data;
+    },
+    setLatexList: function(latexList) {
+        var eqs = latexList.map(function(latex, idx) {
+            return {
+                key: Math.floor(Math.random()*1000000),
+                defaultEq: latex,
+                eqNum: idx
+            }
+        });
+        this.setState({
+            eqs: eqs,
+            numEqs: latexList.length
+        });
     }
 });
 
