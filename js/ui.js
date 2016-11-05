@@ -152,6 +152,9 @@ var EquationList = React.createClass({
             numEqs: 1
         };
     },
+    componentDidMount: function() {
+      window.setLatexList = this.setLatexList;
+    },
     render: function() {
         var d = this.deleteEntry; // scope hax
         var i = 0;
@@ -181,7 +184,8 @@ var EquationList = React.createClass({
             numEqs: numEqs
         });
     },
-    deleteEntry: function(key) {
+    deleteEntry: function(key, equationId) {
+        Grapher._3D.removeGraph(equationId);
         var numEqs = this.state.numEqs - 1;
         var eqs = [];
         var eqNum = 1;
@@ -209,6 +213,23 @@ var EquationList = React.createClass({
             data.text.push(entry.getText());
         }
         return data;
+    },
+    setLatexList: function(latexList) {
+        for (var i = 0; i < this.state.eqs.length; i++) {
+            var entry = this.refs['child_'+i];
+            Grapher._3D.removeGraph(entry.getEquationId());
+        }
+        var eqs = latexList.map(function(latex, idx) {
+            return {
+                key: Math.floor(Math.random()*1000000),
+                defaultEq: latex,
+                eqNum: idx + 1
+            }
+        });
+        this.setState({
+            eqs: eqs,
+            numEqs: latexList.length
+        });
     }
 });
 
@@ -275,6 +296,8 @@ var EquationEntry = React.createClass({
         });
         this.mathField.write(this.props.defaultEq);
         this.mathField.focus();
+        // TODO: fix initial broken rendering of default equation
+        this.editConfirmed();
     },
     mathEdited: function() {
         if (this.hasEdit === undefined) {
@@ -329,9 +352,7 @@ var EquationEntry = React.createClass({
         return this.mathField.text();
     },
     onDelete: function() {
-        Grapher._3D.removeGraph(this.getEquationId());
-
-        this.props.deleteCb(this.props.myKey);
+        this.props.deleteCb(this.props.myKey, this.getEquationId());
     },
     getEquationId: function() {
         return "eq-" + this.props.myKey;
