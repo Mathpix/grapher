@@ -264,7 +264,7 @@ input[type="color"] + label {
   cursor: pointer;
 }
 
-@media only screen and (max-device-width: 500px) {
+@media only screen and (max-device-width: 500px), only screen and (max-width: 500px) {
   .eqs-col {
     display: none !important;
   }
