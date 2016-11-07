@@ -220,6 +220,8 @@ var EquationList = React.createClass({
             Grapher._3D.removeGraph(entry.getEquationId());
         }
         var eqs = latexList.map(function(latex, idx) {
+            latex = latex.replace(/\(/g, "\\left(");
+            latex = latex.replace(/\)/g, "\\right)");
             return {
                 key: Math.floor(Math.random()*1000000),
                 defaultEq: latex,
