@@ -215,21 +215,24 @@ var EquationList = React.createClass({
         return data;
     },
     setLatexList: function(latexList) {
-        for (var i = 0; i < this.state.eqs.length; i++) {
-            var entry = this.refs['child_'+i];
-            Grapher._3D.removeGraph(entry.getEquationId());
-        }
-        var eqs = latexList.map(function(latex, idx) {
-            return {
-                key: Math.floor(Math.random()*1000000),
-                defaultEq: latex,
-                eqNum: idx + 1
-            }
-        });
-        this.setState({
-            eqs: eqs,
-            numEqs: latexList.length
-        });
+        setTimeout(function() {
+          for (var i = 0; i < this.state.eqs.length; i++) {
+              var entry = this.refs['child_'+i];
+              Grapher._3D.removeGraph(entry.getEquationId());
+          }
+          var eqs = latexList.map(function(latex, idx) {
+              return {
+                  key: Math.floor(Math.random()*1000000),
+                  defaultEq: latex,
+                  eqNum: idx + 1
+              }
+          });
+          this.setState({
+              eqs: eqs,
+              numEqs: latexList.length
+          });
+        }.bind(this), 0);
+        return true;
     }
 });
 
