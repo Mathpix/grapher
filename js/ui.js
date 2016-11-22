@@ -314,7 +314,7 @@ var EquationEntry = React.createClass({
             clearTimeout(this.currentTimeout);
         }
 
-        this.currentTimeout = setTimeout(this.editConfirmed, 0.65 * 1000);
+        this.currentTimeout = setTimeout(this.editConfirmed, 0.5 * 1000);
     },
     editConfirmed: function() {
         this.currentTimeout = undefined;

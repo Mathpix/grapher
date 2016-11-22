@@ -2,6 +2,49 @@ var Grapher = require('./3d.js');
 var math = require('mathjs');
 var CustomArrow = require('./CustomArrow.js');
 var createIsoSurface = require('./mc.js').createIsoSurface;
+var workerUtil = require('./workerutil.js');
+
+var workerContent = require('raw-loader!./3dworker.js');
+var worker1 = workerUtil.createWorker(workerContent);
+var worker2 = workerUtil.createWorker(workerContent);
+var worker3 = workerUtil.createWorker(workerContent);
+var worker4 = workerUtil.createWorker(workerContent);
+
+var handleMessage = function(m) {
+    var data = m.data;
+    if (data.action == 'iso_done') {
+        var vertexIndices = data.res.vertexIndices;
+        var vertexPositions = data.res.vertexPositions;
+
+        var indices = new Uint32Array(vertexIndices);
+        var positions = new Float32Array(vertexPositions);
+
+        var geo = new THREE.BufferGeometry();
+        geo.setIndex(new THREE.BufferAttribute(indices, 1));
+        geo.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        geo.computeVertexNormals();
+
+        var mat = new THREE.MeshNormalMaterial({
+            side: THREE.DoubleSide
+        });
+
+        var mesh = new THREE.Mesh(geo, mat);
+
+        Grapher._3D.Main.surfaces.add(mesh);
+
+        Grapher._3D.Main.surfaces.children.forEach(function(s) {
+            if (s.name == data.id)
+                s.add(mesh);
+        });
+    }
+}
+
+worker1.onmessage = handleMessage;
+worker2.onmessage = handleMessage;
+worker3.onmessage = handleMessage;
+worker4.onmessage = handleMessage;
+
 
 Grapher.EquationEntries = {};
 Grapher.Options = {
@@ -93,7 +136,7 @@ Grapher._3D.editGraph = function(latex, text, eqId) {
     };
 
     try {
-        var res = dograph(latex, text);
+        var res = dograph(latex, text, eqId);
         var obj = res.obj;
         obj = res.obj;
         obj.name = eqId;
@@ -122,7 +165,7 @@ Grapher._3D.refreshAll = function() {
     }
 }
 
-function dograph(latex, text) {
+function dograph(latex, text, id) {
     var obj;
     var type;
 
@@ -236,31 +279,36 @@ function dograph(latex, text) {
         if (parts.length != 2) return;
 
         var eq = parts[0] + "-(" + parts[1] + ")";
-        var expr = math.compile(eq);
 
-        var _f = function(x, y, z) {
-            return expr.eval({
-                x: x,
-                y: y,
-                z: z
-            });
-        };
+        var msg = {
+            id: id,
+            action: 'iso_create',
+            eq: eq,
+            zmin: -3,
+            zmax: 3,
+            step: 0.1,
+            zc: Grapher.Options.zoomCoeff
+        }
+        msg.xmin = -3;
+        msg.xmax = 0;
+        msg.ymin = -3;
+        msg.ymax = 0;
+        // -3, 0 and -3, 0
+        worker1.postMessage(msg);
+        msg.ymin = 0;
+        msg.ymax = 3;
+        // -3, 0 and 0, 3
+        worker2.postMessage(msg);
+        msg.xmin = 0;
+        msg.xmax = 3;
+        // 0, 3 and 0, 3
+        worker3.postMessage(msg);
+        msg.ymin = -3;
+        msg.ymax = 0;
+        // 0, 3 anad -3, 0
+        worker4.postMessage(msg);
 
-        var f = _f;
-
-        var d = new Date();
-        console.log("Starting isosurface creation");
-        var zc = Grapher.Options.zoomCoeff;
-        var geo = createIsoSurface(
-            f, 0,
-            -3, 3, -3, 3, -3, 3,
-            0.1, zc
-        );
-        console.log("Finished isosurface creation", new Date() - d);
-        var mat = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
-        var mesh = new THREE.Mesh(geo, mat);
-
-        obj = mesh;
+        obj = new THREE.Object3D();
         type = 'surface';
     }
 
@@ -308,7 +356,6 @@ function extractVFComponents(latex) {
     if (matches == null) {
         return null;
     } else {
-        console.log("GOOD VF", matches.slice(1));
         return matches.slice(1);
     }
 }
