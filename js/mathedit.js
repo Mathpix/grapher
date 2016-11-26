@@ -13,6 +13,11 @@ var worker4 = workerUtil.createWorker(workerContent);
 var handleMessage = function(m) {
     var data = m.data;
     if (data.action == 'iso_done') {
+        $('.progress-bar').css('width', '100%');
+        setTimeout(function() {
+            $('#progress-info-container').css('opacity', '0');
+        }, 350);
+
         var vertexIndices = data.res.vertexIndices;
         var vertexPositions = data.res.vertexPositions;
 
@@ -37,6 +42,16 @@ var handleMessage = function(m) {
             if (s.name == data.id)
                 s.add(mesh);
         });
+    } else if (data.action == 'progress') {
+        // only use progress data from worker #1 to avoid
+        // erratic changes
+        if (data.workerId == 1) {
+            var width = Math.round(data.progress * 100) + '%';
+            $('.progress-bar').css('width', width);
+        }
+    } else if (data.error && data.workerId == 1) {
+        console.log("ERROR");
+        $('#progress-info-container').css('opacity', '0');
     }
 }
 
@@ -207,7 +222,6 @@ function dograph(latex, text, id) {
         );
 
         var curve = new Parametric();
-        console.log(curve.getTangentAt);
         var geo = new THREE.TubeGeometry(curve, 300, 0.04, 9, false);
         var mesh = new THREE.Mesh(geo, new THREE.MeshNormalMaterial({side: THREE.DoubleSide}));
 
@@ -294,19 +308,27 @@ function dograph(latex, text, id) {
         msg.ymin = -3;
         msg.ymax = 0;
         // -3, 0 and -3, 0
+        msg.workerId = 1;
         worker1.postMessage(msg);
         msg.ymin = 0;
         msg.ymax = 3;
         // -3, 0 and 0, 3
+        msg.workerId = 2;
         worker2.postMessage(msg);
         msg.xmin = 0;
         msg.xmax = 3;
         // 0, 3 and 0, 3
+        msg.workerId = 3;
         worker3.postMessage(msg);
         msg.ymin = -3;
         msg.ymax = 0;
-        // 0, 3 anad -3, 0
+        // 0, 3 and -3, 0
+        msg.workerId = 4;
         worker4.postMessage(msg);
+
+        $('.progress-bar').remove();
+        $('#progress-info-container').append('<div class="progress-bar"></div>');
+        $('#progress-info-container').css('opacity', '1');
 
         obj = new THREE.Object3D();
         type = 'surface';

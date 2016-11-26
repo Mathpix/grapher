@@ -1,10 +1,13 @@
 importScripts('	https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.8.0/math.min.js');
 
+var workerId = -1;
+
 onmessage = function(msg) {
 	var data = msg.data;
 
 	var id = data.id;
 	var action = data.action;
+	workerId = data.workerId;
 	if (action == 'iso_create') {
 		try {
 			var f = math.compile(data.eq);
@@ -17,7 +20,8 @@ onmessage = function(msg) {
 			postMessage({
 				id: id,
 				error: 'parse',
-				errorFriendly: "Couldn't parse text"
+				errorFriendly: "Couldn't parse text",
+				workerId: workerId
 			});
 
 			return;
@@ -30,9 +34,17 @@ onmessage = function(msg) {
 		postMessage({
 			id: id,
 			action: 'iso_done',
-			res: res
+			res: res,
 		})
 	}
+}
+
+function sendProgress(curr, min, max) {
+	postMessage({
+		action: 'progress',
+		progress: (curr - min) / (max - min),
+		workerId: workerId
+	});
 }
 
 function lerp(p1, p2, v1, v2) {
@@ -47,6 +59,7 @@ function createIsoSurface(fn, xmin, xmax, ymin, ymax, zmin, zmax, step, zc) {
 	var vertIdx = new Array();
 
 	for (var x = xmin; x < xmax; x += step) {
+		sendProgress(x, xmin, xmax);
 		for (var y = ymin; y < ymax; y += step) {
 			var v4 = fn(zc*x,zc*y,zc*zmin);
 			var v5 = fn(zc*x,zc*(y+step),zc*zmin);
