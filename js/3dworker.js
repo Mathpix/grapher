@@ -29,7 +29,16 @@ onmessage = function(msg) {
 		var xmin = data.xmin, xmax = data.xmax, ymin = data.ymin, ymax = data.ymax,
 			zmin = data.zmin, zmax = data.zmax, step = data.step, zc = data.zc;
 
-		var res = createIsoSurface(fn, xmin, xmax, ymin, ymax, zmin, zmax, step, zc);
+		try {
+			var res = createIsoSurface(fn, xmin, xmax, ymin, ymax, zmin, zmax, step, zc);
+		} catch (e) {
+			postMessage({
+				id: id,
+				error: 'graph',
+				errorFriendly: "Couldn't graph",
+				workerId: workerId
+			});
+		}
 
 		postMessage({
 			id: id,

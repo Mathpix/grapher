@@ -51,7 +51,9 @@ var handleMessage = function(m) {
         }
     } else if (data.error && data.workerId == 1) {
         console.log("ERROR");
-        $('#progress-info-container').css('opacity', '0');
+        setTimeout(function() {
+            $('#progress-info-container').css('opacity', '0');
+        }, 50);
     }
 }
 
