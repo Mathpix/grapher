@@ -164,8 +164,6 @@ var EquationList = React.createClass({
         if (latexListStr) {
           latexList = JSON.parse(latexListStr);
           var eqs = latexList.map(function(latex, idx) {
-              latex = latex.replace(/\(/g, "\\left(");
-              latex = latex.replace(/\)/g, "\\right)");
               return {
                   key: Math.floor(Math.random()*1000000),
                   defaultEq: latex,
@@ -447,7 +445,7 @@ var Controls = React.createClass({
     },
     onShare: function() {
         var latexList = getLatexList();
-        var queryStr = encodeURI(JSON.stringify(latexList));
+        var queryStr = encodeURIComponent(JSON.stringify(latexList));
         var url = "http://grapher.mathpix.com/" + "?latexList=" + queryStr;
         window.open(url);
     },
