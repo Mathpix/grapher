@@ -3,6 +3,7 @@
 First,
 
     $ npm install
+    $ npm run build
 
 In another Terminal tab:
 
