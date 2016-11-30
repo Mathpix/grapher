@@ -145,8 +145,38 @@ var SettingsModal = React.createClass({
     }
 });
 
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    var search = location.search;
+    if (search.charAt(search.length - 1) == "/") {
+      search = search.substring(0, search.length - 1);
+    }
+    console.log(search);
+    var results = regex.exec(search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+};
+
 var EquationList = React.createClass({
     getInitialState: function() {
+        var url = window.location.href;
+        var latexListStr = getUrlParameter('latexList');
+        if (latexListStr) {
+          latexList = JSON.parse(latexListStr);
+          var eqs = latexList.map(function(latex, idx) {
+              latex = latex.replace(/\(/g, "\\left(");
+              latex = latex.replace(/\)/g, "\\right)");
+              return {
+                  key: Math.floor(Math.random()*1000000),
+                  defaultEq: latex,
+                  eqNum: idx + 1
+              };
+          });
+          return {
+            eqs: eqs,
+            numEqs: eqs.length
+          };
+        }
         return {
             eqs: [{key: 1, eqNum: 1, defaultEq: "z = "}],
             numEqs: 1
@@ -154,6 +184,7 @@ var EquationList = React.createClass({
     },
     componentDidMount: function() {
       window.setLatexList = this.setLatexList;
+      window.getLatexList = this.getLatexList;
     },
     render: function() {
         var d = this.deleteEntry; // scope hax
@@ -203,16 +234,21 @@ var EquationList = React.createClass({
         });
     },
     getEquationData: function() {
-        var data = {
-            latex: [],
-            text: []
-        }
+        var dataList = [];
         for (var i = 0; i < this.state.eqs.length; i++) {
             var entry = this.refs['child_'+i];
-            data.latex.push(entry.getLatex());
-            data.text.push(entry.getText());
+            var data = {
+                latex: entry.getLatex(),
+                text: entry.getText()
+            }
+            dataList.push(data);
         }
-        return data;
+        return dataList;
+    },
+    getLatexList: function(latexList) {
+      return this.getEquationData().map(
+          function(elem) { return elem.latex }
+      );
     },
     setLatexList: function(latexList) {
         setTimeout(function() {
@@ -376,6 +412,9 @@ var Controls = React.createClass({
             traceClass += " blue";
         };
         return (<div>
+            <button className="icon-btn btn" onClick={this.onShare}>
+                <i className="material-icons">open_in_new</i>
+            </button>
             <button className={traceClass} onClick={this.toggleTrace}
             data-tooltip="Trace Surface" data-position="right"
             data-delay="50">
@@ -405,6 +444,12 @@ var Controls = React.createClass({
         } else {
             ele.setAttribute('style', 'display: none');
         }
+    },
+    onShare: function() {
+        var latexList = getLatexList();
+        var queryStr = encodeURI(JSON.stringify(latexList));
+        var url = "http://grapher.mathpix.com/" + "?latexList=" + queryStr;
+        window.open(url);
     },
     zoomIn: function() {
         Grapher.Options.zoomCoeff /= 2;
