@@ -449,7 +449,12 @@ var Controls = React.createClass({
         var latexList = getLatexList();
         var queryStr = encodeURIComponent(JSON.stringify(latexList));
         var url = "http://grapher.mathpix.com/" + "?latexList=" + queryStr;
-        window.open(url);
+        try {
+          nativeHandler.onShareURL(url);
+        }
+        catch (err) {
+          window.open(url);
+        }
     },
     zoomIn: function() {
         Grapher.Options.zoomCoeff /= 2;
