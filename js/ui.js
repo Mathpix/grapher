@@ -430,6 +430,7 @@ var Controls = React.createClass({
     },
     componentDidMount: function() {
         $('.tooltipped').tooltip();
+        window.onShare = this.onShare;
     },
     toggleTrace: function() {
         var newVal = !this.state.traceActive;
