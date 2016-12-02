@@ -405,12 +405,12 @@ var Controls = React.createClass({
         }
     },
     render: function() {
-        var traceClass = "icon-btn btn tooltipped";
+        var traceClass = "icon-btn btn";
         if (this.state.traceActive) {
             traceClass += " blue";
         };
         return (<div>
-            <button className="icon-btn btn tooltipped" onClick={this.onShare}
+            <button className="icon-btn btn" onClick={this.onShare}
             data-tooltip="Shareable Link" data-position="right"
             data-delay="50">
                 <i className="material-icons">open_in_new</i>
