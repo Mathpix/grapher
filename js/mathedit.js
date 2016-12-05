@@ -1,14 +1,13 @@
 var Grapher = require('./3d.js');
 var math = require('mathjs');
 var CustomArrow = require('./CustomArrow.js');
-var createIsoSurface = require('./mc.js').createIsoSurface;
-var workerUtil = require('./workerutil.js');
+var WorkerUtil = require('./util/workerutil.js');
 
 var workerContent = require('raw-loader!./3dworker.js');
-var worker1 = workerUtil.createWorker(workerContent);
-var worker2 = workerUtil.createWorker(workerContent);
-var worker3 = workerUtil.createWorker(workerContent);
-var worker4 = workerUtil.createWorker(workerContent);
+var worker1 = WorkerUtil.createWorker(workerContent);
+var worker2 = WorkerUtil.createWorker(workerContent);
+var worker3 = WorkerUtil.createWorker(workerContent);
+var worker4 = WorkerUtil.createWorker(workerContent);
 
 var handleMessage = function(m) {
     var data = m.data;
