@@ -26,8 +26,6 @@ _3D.MiniAxes = {
     camera:     undefined
 };
 
-var traceXline, traceYline, traceZline;
-
 //var axesContainer, axesScene, axesRenderer, axesAxisHelper, axesCamera;
 
 // parameters for the equations
@@ -215,25 +213,6 @@ function init() {
     traceSphere.visible = false;
     scene.add(traceSphere);
 
-    traceXline = new THREE.Line(
-        new THREE.Geometry(),
-        new THREE.LineBasicMaterial({color: 0xFF0000, linewidth: 2})
-    );
-    traceXline.geometry.vertices = [new THREE.Vector3(0,0,0), new THREE.Vector3(1,0,0)];
-    scene.add(traceXline);
-    traceYline = new THREE.Line(
-        new THREE.Geometry(),
-        new THREE.LineBasicMaterial({color: 0x00FF00, linewidth: 2})
-    );
-    traceYline.geometry.vertices = [new THREE.Vector3(0,0,0), new THREE.Vector3(0,1,0)];
-    scene.add(traceYline);
-    traceZline = new THREE.Line(
-        new THREE.Geometry(),
-        new THREE.LineBasicMaterial({color: 0x0000FF, linewidth: 2})
-    );
-    traceZline.geometry.vertices = [new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,1)];
-    scene.add(traceZline);
-
     var surfaces = new THREE.Object3D();
     _3D.Main.surfaces = surfaces;
     surfaces.up = new THREE.Vector3(0, 0, 1);
@@ -312,18 +291,6 @@ function raycastMouse() {
         var x = pt.x.toFixed(3),
             y = pt.y.toFixed(3),
             z = pt.z.toFixed(3);
-
-        traceXline.geometry.vertices[0].copy(new THREE.Vector3(0, 0, 0));
-        traceXline.geometry.vertices[1].copy(new THREE.Vector3(pt.x, 0, 0));
-        traceXline.geometry.verticesNeedUpdate = true;
-
-        traceYline.geometry.vertices[0].copy(new THREE.Vector3(pt.x, 0, 0));
-        traceYline.geometry.vertices[1].copy(new THREE.Vector3(pt.x, pt.y, 0));
-        traceYline.geometry.verticesNeedUpdate = true;
-
-        traceZline.geometry.vertices[0].copy(new THREE.Vector3(pt.x, pt.y, 0));
-        traceZline.geometry.vertices[1].copy(new THREE.Vector3(pt.x, pt.y, pt.z));
-        traceZline.geometry.verticesNeedUpdate = true;
 
         ele.innerText = 'Trace: (' + x + ', ' + y + ', ' + z + ')';
     } else {
