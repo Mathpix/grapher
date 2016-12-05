@@ -79,9 +79,9 @@ function init() {
     camera.lookAt(scene.position);
     // RENDERER
     if (Detector.webgl)
-        _3D.Main.renderer = new THREE.WebGLRenderer({antialias:true});
+        _3D.Main.renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
     else
-        _3D.Main.renderer = new THREE.CanvasRenderer();
+        _3D.Main.renderer = new THREE.CanvasRenderer({alpha:true});
     var renderer = _3D.Main.renderer;
 
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -98,6 +98,7 @@ function init() {
     var controls = _3D.Main.controls;
     controls.minDistance = 0.5;
     controls.maxDistance = 100;
+    controls.zoomSpeed = 0.5; // 1 by default
     controls.enableKeys = false;
 
     // LIGHT
@@ -183,7 +184,7 @@ function init() {
     wireMaterial = new THREE.MeshBasicMaterial( { map: wireTexture, vertexColors: THREE.VertexColors, side:THREE.DoubleSide } );
     var vertexColorMaterial  = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
     // bgcolor
-    renderer.setClearColor( 0x888888, 1 );
+    //renderer.setClearColor( 0x888888, 1 );
 
     _3D.Main.raycaster = new THREE.Raycaster();
     _3D.Main.mousePos = new THREE.Vector2();
@@ -278,11 +279,13 @@ function raycastMouse() {
 
     var ray = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
 
-    var intersects = ray.intersectObjects(_3D.Main.surfaces.children);
+    // recursive
+    var intersects = ray.intersectObjects(_3D.Main.surfaces.children, true);
     var ele = document.getElementById('trace-info-container');
     if (intersects.length > 0) {
         traceSphere.visible = true;
         traceSphere.position.copy(intersects[0].point);
+
 
         var pt = intersects[0].point;
         var x = pt.x.toFixed(3),
@@ -296,23 +299,6 @@ function raycastMouse() {
     }
 }
 
-function resetCamera() {
-    console.log('reset');
-    // CAMERA
-    //var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
-    var SCREEN_WIDTH = $('#ThreeJS').width(), SCREEN_HEIGHT = $('#ThreeJS').height();
-    var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
-    camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
-    camera.position.set( 2*xMax, 0.5*yMax, 4*zMax);
-    camera.up = new THREE.Vector3( 0, 0, 1 );
-    camera.lookAt(scene.position);
-    scene.add(camera);
-
-    controls = new THREE.OrbitControls( camera, renderer.domElement );
-    controls.minDistance = 1;
-    controls.maxDistance = 2000;
-    WindowResize(renderer, camera, dimensionCallback);
-}
 function animate() {
     requestAnimationFrame(animate);
     render();

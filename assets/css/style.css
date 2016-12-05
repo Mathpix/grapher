@@ -164,6 +164,8 @@ html, body{
 #ThreeJS {
     width: 100%;
     height: 100%;
+
+    background: radial-gradient(rgb(189, 189, 189), rgb(95, 95, 95));
 }
 
 #ThreeJS-axes {
