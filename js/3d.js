@@ -26,6 +26,8 @@ _3D.MiniAxes = {
     camera:     undefined
 };
 
+var traceXline, traceYline, traceZline;
+
 //var axesContainer, axesScene, axesRenderer, axesAxisHelper, axesCamera;
 
 // parameters for the equations
@@ -79,9 +81,9 @@ function init() {
     camera.lookAt(scene.position);
     // RENDERER
     if (Detector.webgl)
-        _3D.Main.renderer = new THREE.WebGLRenderer({antialias:true});
+        _3D.Main.renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
     else
-        _3D.Main.renderer = new THREE.CanvasRenderer();
+        _3D.Main.renderer = new THREE.CanvasRenderer({alpha:true});
     var renderer = _3D.Main.renderer;
 
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -98,6 +100,7 @@ function init() {
     var controls = _3D.Main.controls;
     controls.minDistance = 0.5;
     controls.maxDistance = 100;
+    controls.zoomSpeed = 0.5; // 1 by default
     controls.enableKeys = false;
 
     // LIGHT
@@ -183,7 +186,7 @@ function init() {
     wireMaterial = new THREE.MeshBasicMaterial( { map: wireTexture, vertexColors: THREE.VertexColors, side:THREE.DoubleSide } );
     var vertexColorMaterial  = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
     // bgcolor
-    renderer.setClearColor( 0x888888, 1 );
+    //renderer.setClearColor( 0x888888, 1 );
 
     _3D.Main.raycaster = new THREE.Raycaster();
     _3D.Main.mousePos = new THREE.Vector2();
@@ -211,6 +214,25 @@ function init() {
     _3D.Main.traceSphere = traceSphere;
     traceSphere.visible = false;
     scene.add(traceSphere);
+
+    traceXline = new THREE.Line(
+        new THREE.Geometry(),
+        new THREE.LineBasicMaterial({color: 0xFF0000, linewidth: 2})
+    );
+    traceXline.geometry.vertices = [new THREE.Vector3(0,0,0), new THREE.Vector3(1,0,0)];
+    scene.add(traceXline);
+    traceYline = new THREE.Line(
+        new THREE.Geometry(),
+        new THREE.LineBasicMaterial({color: 0x00FF00, linewidth: 2})
+    );
+    traceYline.geometry.vertices = [new THREE.Vector3(0,0,0), new THREE.Vector3(0,1,0)];
+    scene.add(traceYline);
+    traceZline = new THREE.Line(
+        new THREE.Geometry(),
+        new THREE.LineBasicMaterial({color: 0x0000FF, linewidth: 2})
+    );
+    traceZline.geometry.vertices = [new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,1)];
+    scene.add(traceZline);
 
     var surfaces = new THREE.Object3D();
     _3D.Main.surfaces = surfaces;
@@ -278,16 +300,30 @@ function raycastMouse() {
 
     var ray = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
 
-    var intersects = ray.intersectObjects(_3D.Main.surfaces.children);
+    // recursive
+    var intersects = ray.intersectObjects(_3D.Main.surfaces.children, true);
     var ele = document.getElementById('trace-info-container');
     if (intersects.length > 0) {
         traceSphere.visible = true;
         traceSphere.position.copy(intersects[0].point);
 
+
         var pt = intersects[0].point;
         var x = pt.x.toFixed(3),
             y = pt.y.toFixed(3),
             z = pt.z.toFixed(3);
+
+        traceXline.geometry.vertices[0].copy(new THREE.Vector3(0, 0, 0));
+        traceXline.geometry.vertices[1].copy(new THREE.Vector3(pt.x, 0, 0));
+        traceXline.geometry.verticesNeedUpdate = true;
+
+        traceYline.geometry.vertices[0].copy(new THREE.Vector3(pt.x, 0, 0));
+        traceYline.geometry.vertices[1].copy(new THREE.Vector3(pt.x, pt.y, 0));
+        traceYline.geometry.verticesNeedUpdate = true;
+
+        traceZline.geometry.vertices[0].copy(new THREE.Vector3(pt.x, pt.y, 0));
+        traceZline.geometry.vertices[1].copy(new THREE.Vector3(pt.x, pt.y, pt.z));
+        traceZline.geometry.verticesNeedUpdate = true;
 
         ele.innerText = 'Trace: (' + x + ', ' + y + ', ' + z + ')';
     } else {
@@ -296,23 +332,6 @@ function raycastMouse() {
     }
 }
 
-function resetCamera() {
-    console.log('reset');
-    // CAMERA
-    //var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
-    var SCREEN_WIDTH = $('#ThreeJS').width(), SCREEN_HEIGHT = $('#ThreeJS').height();
-    var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
-    camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
-    camera.position.set( 2*xMax, 0.5*yMax, 4*zMax);
-    camera.up = new THREE.Vector3( 0, 0, 1 );
-    camera.lookAt(scene.position);
-    scene.add(camera);
-
-    controls = new THREE.OrbitControls( camera, renderer.domElement );
-    controls.minDistance = 1;
-    controls.maxDistance = 2000;
-    WindowResize(renderer, camera, dimensionCallback);
-}
 function animate() {
     requestAnimationFrame(animate);
     render();

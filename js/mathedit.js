@@ -2,6 +2,8 @@ var Grapher = require('./3d.js');
 var math = require('mathjs');
 var CustomArrow = require('./CustomArrow.js');
 var WorkerUtil = require('./util/workerutil.js');
+var StringUtil = require('./util/stringutil.js');
+var exprContainsSymbol = require('./util/mathutil.js').exprContainsSymbol;
 
 var workerContent = require('raw-loader!./3dworker.js');
 var worker1 = WorkerUtil.createWorker(workerContent);
@@ -68,14 +70,16 @@ Grapher.Options = {
     // world coordinates to coordinates used for graphing
     // i.e. x_graph = zoomCoeff * x_world
     zoomCoeff: 1,
-    // Resolution in xyz directions. Specifies
-    // the step size used when creating a surface.
-    xRes: 0.1,
-    yRes: 0.1,
-    zRes: 0.1
+    // Resolution / step size
+    res: 0.1
 };
 
 function processLatex(latex) {
+    // matrices
+    latex = latex.replace(/\\begin{[bp]matrix}(.*?)\\end{[bp]matrix}/g, function(_, m) {
+        return "([" + m.replace(/\&/g, ",").replace(/\\\\/g, ";") + "])";
+    });
+
     latex = latex.replace(/\\left/g, "");
     latex = latex.replace(/\\right/g, "");
     latex = latex.replace(/\\sin/g, "sin");
@@ -84,14 +88,21 @@ function processLatex(latex) {
     latex = latex.replace(/\\log/g, "log");
     latex = latex.replace(/\\ln/g, "log");
     latex = latex.replace(/\\pi/g, "pi ");
+    latex = latex.replace(/\\Gamma/g, "gamma");
     latex = latex.replace(/\\cdot/g, "*");
     latex = latex.replace(/\\operatorname\{abs\}/g, "abs");
     latex = latex.replace(/\^{(.*?)}/g, "^($1)");
-
     return latex;
 }
 
 function processText(text) {
+    text = text.replace(/f\*\(x\*,\*y\)/g, "z");
+    text = text.replace(/f\*\(y\*,\*x\)/g, "z");
+    text = text.replace(/f\*\(y\*,\*z\)/g, "x");
+    text = text.replace(/f\*\(z\*,\*y\)/g, "x");
+    text = text.replace(/f\*\(x\*,\*z\)/g, "y");
+    text = text.replace(/f\*\(z\*,\*x\)/g, "y");
+
     text = text.replace(/\\s\*i\*n \*/g, "sin");
     text = text.replace(/\\c\*o\*s \*/g, "cos");
     text = text.replace(/\\t\*a\*n \*/g, "tan");
@@ -109,6 +120,8 @@ function processText(text) {
 
     text = text.replace(/\\l\*n \*/g, "ln");
     text = text.replace(/\\l\*o\*g \*/g, "log");
+
+    text = text.replace(/\\g\*a\*m\*m\*a \*/g, "gamma");
 
     text = text.replace(/\\operatorname\{(.*?)\}\*/g, function(_, m) {
         return m.replace(/\*/g, "");
@@ -144,15 +157,17 @@ var mathField = MQ.MathField(mathFieldEle, {
     }
 })
 
-Grapher._3D.editGraph = function(latex, text, eqId) {
+Grapher._3D.editGraph = function(latex, text, eqId, lDomain, uDomain) {
     Grapher._3D.removeGraph(eqId);
     Grapher.EquationEntries[eqId] = {
         latex: latex,
-        text: text
+        text: text,
+        lDomain: lDomain,
+        uDomain: uDomain
     };
 
     try {
-        var res = dograph(latex, text, eqId);
+        var res = dograph(latex, text, eqId, lDomain, uDomain);
         var obj = res.obj;
         obj = res.obj;
         obj.name = eqId;
@@ -181,13 +196,24 @@ Grapher._3D.refreshAll = function() {
     }
 }
 
-function dograph(latex, text, id) {
+function dograph(latex, text, id, lDomain, uDomain) {
     var obj;
     var type;
 
     var vecComponents = extractVectorComponents(latex);
     var pointComponents = extractPointComponents(text);
-    var parametricComponents = extractParametricComponents(latex);
+    var parametricComponents = extractParametric(latex);
+
+    console.log("Vector components", vecComponents);
+
+    var lowerDomain = 0;
+    try {
+        lowerDomain = math.eval(processText(lDomain));
+    } catch (e) {}
+    var upperDomain = 1;
+    try {
+        upperDomain = math.eval(processText(uDomain));
+    } catch (e) {}
 
     var paramMode = undefined;
     if (parametricComponents) {
@@ -196,61 +222,84 @@ function dograph(latex, text, id) {
             paramMode = 'rectangular';
         } else if (arr[0] == 'r' && arr[1] == '\\theta' && arr[2] == 'z') {
             paramMode = 'cylindrical';
+        } else if (arr[0] == 'r' && arr[1] == '\\theta' && arr[2] == '\\phi') {
+            paramMode = 'spherical';
         }
     }
-    console.log("parametric mode", paramMode);
-    var vfComponents = extractVFComponents(latex);
-        if (parametricComponents && paramMode !== undefined) {
-        var xComp = math.compile(parametricComponents[3]);
-        var yComp = math.compile(parametricComponents[4]);
-        var zComp = math.compile(parametricComponents[5]);
+    var vfComponents = extractVF(latex);
+    if (parametricComponents && paramMode !== undefined) {
+        var vec = math.compile(parametricComponents[3]);
 
         var zc = Grapher.Options.zoomCoeff;
         var Parametric = THREE.Curve.create(
             function() {},
             function(t) {
-                var x = xComp.eval({t: t/zc});
-                var y = yComp.eval({t: t/zc});
-                var z = zComp.eval({t: t/zc});
+                // change 0 < t < 1 to lowerDomain < t < upperDomain
+                t = lowerDomain + (upperDomain - lowerDomain) * t;
+                var evalVec = vec.eval({t: t/zc});
+
+                var x = evalVec._data[0][0];
+                var y = evalVec._data[1][0];
+                var z = evalVec._data[2][0];
                 if (paramMode == 'cylindrical') {
                     var xNew = x * Math.cos(y);
                     var yNew = x * Math.sin(y);
                     x = xNew;
                     y = yNew;
+                } else if (paramMode == 'spherical') {
+                    var xNew = x * Math.sin(y) * Math.cos(z);
+                    var yNew = x * Math.sin(y) * Math.sin(z);
+                    var zNew = x * Math.cos(y);
+                    x = xNew;
+                    y = yNew;
+                    z = zNew;
                 }
                 return new THREE.Vector3(x/zc, y/zc, z/zc);
             }
         );
 
         var curve = new Parametric();
-        var geo = new THREE.TubeGeometry(curve, 300, 0.04, 9, false);
-        var mesh = new THREE.Mesh(geo, new THREE.MeshNormalMaterial({side: THREE.DoubleSide}));
+        var d = new Date();
+        var geo = new THREE.TubeGeometry(curve, 600, 0.04, 15, false);
+        console.log(new Date() - d);
+        for (var i = 0; i < geo.faces.length; i++) {
+            var face = geo.faces[i];
+            var h = Math.floor(i/30);
+            face.color.setHSL(h/600, 0.75, 0.5);
+        }
+        var mesh = new THREE.Mesh(
+            geo,
+            new THREE.MeshStandardMaterial({
+                side: THREE.DoubleSide,
+                vertexColors: THREE.FaceColors
+            })
+        );
 
         obj = mesh;
         type = 'parametric';
     } else if (vfComponents) {
         obj = new THREE.Object3D();
-        var xComp = math.compile(vfComponents[0]);
-        var yComp = math.compile(vfComponents[1]);
-        var zComp = math.compile(vfComponents[2]);
+        var vec = math.compile(vfComponents);
 
         var zc = Grapher.Options.zoomCoeff;
         for (var x = -3; x <= 3; x += 1) {
             for (var y = -3; y <= 3; y += 1) {
                 for (var z = -3; z <= 3; z += 1) {
                     var ctx = {x:zc*x, y:zc*y, z:zc*z};
-                    var vecX = xComp.eval(ctx);
-                    var vecY = yComp.eval(ctx);
-                    var vecZ = zComp.eval(ctx);
+                    var evalVec = vec.eval(ctx);
 
-                    var vec = new THREE.Vector3(vecX, vecY, vecZ);
-                    var len = vec.length();
+                    var v = new THREE.Vector3(
+                        evalVec._data[0][0],
+                        evalVec._data[1][0],
+                        evalVec._data[2][0]
+                    );
+                    var len = v.length();
                     if (len == 0) continue;
-                    vec.normalize();
+                    v.normalize();
                     var color = new THREE.Color().setHSL(Math.abs(len-5)/10.0, 1, 0.5);
                     var arrow = new CustomArrow(
-                        vec, new THREE.Vector3(x,y,z), 1,
-                        color, undefined, 0.25, 5
+                        v, new THREE.Vector3(x,y,z), 0.85,
+                        color, undefined, 0.25, 2, THREE.MeshStandardMaterial
                     );
                     obj.add(arrow);
                 }
@@ -270,7 +319,7 @@ function dograph(latex, text, id) {
         var color = new THREE.Color().setHSL(Math.random(), 1, 0.5);
         var arrow = new CustomArrow(
             vec, new THREE.Vector3(0, 0, 0), norm,
-            color, undefined, 0.25, 5.0
+            color, undefined, 0.25, 5.0, THREE.MeshStandardMaterial
         );
 
         obj = arrow;
@@ -281,7 +330,7 @@ function dograph(latex, text, id) {
             v3 = math.eval(pointComponents[2]);
 
         var geo = new THREE.SphereGeometry(0.1, 20, 20);
-        var mat = new THREE.MeshBasicMaterial({color: 0x0000FF});
+        var mat = new THREE.MeshStandardMaterial({color: 0x0000FF});
         var dot = new THREE.Mesh(geo, mat);
         dot.position.set(v1, v2, v3);
         dot.position.divideScalar(Grapher.Options.zoomCoeff);
@@ -293,17 +342,51 @@ function dograph(latex, text, id) {
         var parts = eq.split("=");
         if (parts.length != 2) return;
 
-        var eq = parts[0] + "-(" + parts[1] + ")";
+        var lh = parts[0],
+            rh = parts[1];
+        if (lh.length < 1 || rh.length < 1) return;
+
+        var lhExpr = math.parse(lh),
+            rhExpr = math.parse(rh);
 
         var msg = {
             id: id,
-            action: 'iso_create',
-            eq: eq,
+            action: '2d_create',
+            step: Grapher.Options.res,
+            zc: Grapher.Options.zoomCoeff,
             zmin: -3,
-            zmax: 3,
-            step: 0.1,
-            zc: Grapher.Options.zoomCoeff
+            zmax: 3
+        };
+
+        if (lh === 'x' && !exprContainsSymbol(rhExpr, 'x')) {
+            msg.eq = rh;
+            msg.dependent = 'x';
+        } else if (rh === 'x' && !exprContainsSymbol(lhExpr, 'x')) {
+            msg.eq = lh;
+            msg.dependent = 'x';
+        } else if (lh === 'y' && !exprContainsSymbol(rhExpr, 'y')) {
+            msg.eq = rh;
+            msg.dependent = 'y';
+        } else if (rh === 'y' && !exprContainsSymbol(lhExpr, 'y')) {
+            msg.eq = lh;
+            msg.dependent = 'y';
+        } else if (lh === 'z' && !exprContainsSymbol(rhExpr, 'z')) {
+            msg.eq = rh;
+            msg.dependent = 'z';
+        } else if (rh === 'z' && !exprContainsSymbol(lhExpr, 'z')) {
+            msg.eq = lh;
+            msg.dependent = 'z';
+        } else {
+            // one variable is not isolated, use isosurface instead
+
+            // create a scalar field f(x, y, z) so f(x, y, z) = 0
+            // represents the surface.
+            msg.eq = lh + "-(" + rh + ")";
+            msg.action = 'iso_create';
         }
+
+        console.log(msg);
+
         msg.xmin = -3;
         msg.xmax = 0;
         msg.ymin = -3;
@@ -340,13 +423,14 @@ function dograph(latex, text, id) {
 exports.dograph = dograph;
 
 function extractVectorComponents(latex) {
-    latex = processLatex(latex);
     var regex = /^\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
     var matches = regex.exec(latex);
     if (matches == null) {
         return null;
     } else {
-        return matches.slice(1);
+        return matches.slice(1).map(function(e) {
+            return processLatex(e)
+        });
     }
 }
 
@@ -361,24 +445,25 @@ function extractPointComponents(text) {
     }
 }
 
-function extractParametricComponents(latex) {
-    latex = processLatex(latex)
-    var regex = /^\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}=\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
+function extractParametric(latex) {
+    var regex = /^\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}=(.*)$/;
     var matches = regex.exec(latex);
     if (matches == null) {
         return null;
     } else {
-        return matches.slice(1);
+        var res = matches.slice(1);
+        res[3] = processLatex(res[3]);
+        return res;
     }
 }
 
-function extractVFComponents(latex) {
-    latex = processLatex(latex);
-    var regex = /^\\Delta\\begin{bmatrix}x\\\\y\\\\z\\end{bmatrix}=\\begin{bmatrix}(.*?)\\\\(.*?)\\\\(.*?)\\end{bmatrix}$/;
+function extractVF(latex) {
+    var regex = /^\\Delta\\begin{bmatrix}x\\\\y\\\\z\\end{bmatrix}=(.*)$/;
     var matches = regex.exec(latex);
     if (matches == null) {
         return null;
     } else {
-        return matches.slice(1);
+        var res = matches[1];
+        return processLatex(res);
     }
 }

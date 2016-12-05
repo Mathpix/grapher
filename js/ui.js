@@ -6,6 +6,8 @@ var Grapher = require('./3d.js');
 window.Grapher = Grapher;
 var dograph = require('./mathedit.js').dograph;
 
+var ConfirmedCallback = require('./util/timerutil.js').ConfirmedCallback;
+
 var ReactComponents = {};
 
 var EquationSidebar = React.createClass({
@@ -241,7 +243,8 @@ var EquationList = React.createClass({
 var EquationEntry = React.createClass({
     getInitialState: function() {
         return {
-            error: undefined
+            error: undefined,
+            parametric: false
         };
     },
     render: function() {
@@ -258,6 +261,13 @@ var EquationEntry = React.createClass({
             var iconPath = "assets/images/icon_" + type + ".svg";
             var icon = <img src={iconPath} />
         }
+
+        var domainStyle;
+        if (this.state.parametric) {
+            domainStyle = {};
+        } else {
+            domainStyle = {display: "none"};
+        }
         return (
             <div className="eq-entry">
                 <table>
@@ -273,7 +283,12 @@ var EquationEntry = React.createClass({
                         </td>
                         <td width="85%">
                             <span className="eq-input-container">
-                            <span className="eq-input" ref="eqInput"></span>
+                                <span className="eq-input" ref="eqInput"></span>
+                                <div className="eq-domain" style={domainStyle}>
+                                    <span ref="lowerDomain">0</span>
+                                    <span ref="domainVar">{'\\leq t \\leq'}</span>
+                                    <span ref="upperDomain">1</span>
+                                </div>
                             </span>
                         </td>
                     </tr>
@@ -288,37 +303,47 @@ var EquationEntry = React.createClass({
         );
     },
     componentDidMount: function() {
-        // initialize mathquill
-        this.mathField = MQ.MathField(this.refs.eqInput, {
+        var mainConfirmCb = new ConfirmedCallback(0.5*1000, this.editConfirmed);
+
+        var config = {
             spaceBehavesLikeTab: true,
             charsThatBreakOutOfSupSub: '+-=<>',
-            autoCommands: 'pi theta sqrt',
+            autoCommands: 'pi theta sqrt phi',
             autoOperatorNames: 'sin cos tan csc sec cot sinh cosh tanh csch sech coth ' +
                 'ln log max min sign abs exp round floor ceil mod',
             handlers: {
-                edit: this.mathEdited
+                edit: mainConfirmCb.callback
+            }
+        };
+        // initialize mathquill
+        this.mathField = MQ.MathField(this.refs.eqInput, config);
+
+        MQ.StaticMath(this.refs.domainVar);
+
+        this.lowerDomain = MQ.MathField(this.refs.lowerDomain, {
+            spaceBehavesLikeTab: true,
+            charsThatBreakOutOfSupSub: '+-=<>',
+            autoCommands: 'pi theta sqrt phi',
+            handlers: {
+                edit: mainConfirmCb.callback
             }
         });
+        this.upperDomain = MQ.MathField(this.refs.upperDomain, {
+            spaceBehavesLikeTab: true,
+            charsThatBreakOutOfSupSub: '+-=<>',
+            autoCommands: 'pi theta sqrt phi',
+            handlers: {
+                edit: mainConfirmCb.callback
+            }
+        });
+
         this.mathField.write(this.props.defaultEq);
         this.mathField.focus();
         // TODO: fix initial broken rendering of default equation
         this.editConfirmed();
-    },
-    mathEdited: function() {
-        if (this.hasEdit === undefined) {
-            this.hasEdit = true;
-            return;
-        }
 
-        if (this.currentTimeout) {
-            clearTimeout(this.currentTimeout);
-        }
-
-        this.currentTimeout = setTimeout(this.editConfirmed, 0.5 * 1000);
     },
     editConfirmed: function() {
-        this.currentTimeout = undefined;
-
         var latex = this.getLatex();
         if (latex.trim() == "") {
             Grapher._3D.removeGraph(this.getEquationId());
@@ -330,10 +355,13 @@ var EquationEntry = React.createClass({
         }
 
         var res = Grapher._3D.editGraph(
-            this.getLatex(), this.getText(), this.getEquationId()
+            this.getLatex(), this.getText(), this.getEquationId(),
+            this.getLowerDomainText(),
+            this.getUpperDomainText()
         );
         var error = undefined;
         var success = undefined;
+        var parametric = false;
         if (res['error']) {
             error = {
                 msg: res['error'],
@@ -342,11 +370,13 @@ var EquationEntry = React.createClass({
         } else {
             success = {
                 type: res['type']
-            }
+            };
+            parametric = (res['type'] === 'parametric');
         }
         this.setState({
             error: error,
-            success: success
+            success: success,
+            parametric: parametric
         })
         $('.tooltipped').tooltip();
     },
@@ -355,6 +385,12 @@ var EquationEntry = React.createClass({
     },
     getText: function() {
         return this.mathField.text();
+    },
+    getLowerDomainText: function() {
+        return this.lowerDomain.text();
+    },
+    getUpperDomainText: function() {
+        return this.upperDomain.text()
     },
     onDelete: function() {
         this.props.deleteCb(this.props.myKey, this.getEquationId());
