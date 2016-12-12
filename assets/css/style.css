@@ -273,12 +273,6 @@ input[type="color"] + label {
   .graph-col {
     width: 100% !important;
   }
-  #header {
-    display: none !important;
-  }
-  .row {
-    height: 100% !important;
-  }
 }
 
 #progress-info-container {
