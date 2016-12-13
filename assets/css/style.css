@@ -51,6 +51,11 @@ html, body{
     max-height: 100%;
 }
 
+.nav-wrapper span.icon {
+    font-size: 1.7em;
+    vertical-align: sub;
+}
+
 .row {
     margin: 0;
     height: calc(100% - 64px);
