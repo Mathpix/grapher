@@ -71,24 +71,14 @@ exports.thickenSurface = function(geometry, depth) {
     newGeo.computeFaceNormals();
     newGeo.computeVertexNormals();
 
-    if (depth > 0) {
-        for (var i = 0; i < faceLen; i++) {
-            var f = newGeo.faces[i];
-            f.normal.multiplyScalar(-1);
-            // swap two vertices (change normal direction)
-            var a = f.a, c = f.c;
-            f.a = c;
-            f.c = a;
-        }
-    } else {
-        for (var i = 0; i < faceLen; i++) {
-            var f = newGeo.faces[i+faceLen];
-            f.normal.multiplyScalar(-1);
-            // swap two vertices (change normal direction)
-            var a = f.a, c = f.c;
-            f.a = c;
-            f.c = a;
-        }
+    var offset = depth > 0 ? 0 : faceLen;
+    for (var i = 0; i < faceLen; i++) {
+        var f = newGeo.faces[i + offset];
+        f.normal.multiplyScalar(-1);
+        // swap two vertices (change normal direction)
+        var a = f.a, c = f.c;
+        f.a = c;
+        f.c = a;
     }
 
     return newGeo;
