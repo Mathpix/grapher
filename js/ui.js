@@ -6,6 +6,8 @@ var Grapher = require('./3d.js');
 window.Grapher = Grapher;
 var dograph = require('./mathedit.js').dograph;
 
+var Export = require('./export.js');
+
 var ConfirmedCallback = require('./util/timerutil.js').ConfirmedCallback;
 
 var ReactComponents = {};
@@ -72,11 +74,21 @@ var EquationOptions = React.createClass({
                 </a></li>
             </ul>
             <div className="right">
-                <a href="#settings-modal" className="btn modal-trigger">
+                <a className="dropdown-button btn icon-btn" data-activates="export-dropdown">
+                    <i className="material-icons">file_download</i>
+                </a>
+                <ul id="export-dropdown" className="dropdown-content">
+                    <li><a href="#3d-modal" className="modal-trigger">
+                        Export to 3D file
+                    </a></li>
+                </ul>
+
+                <a href="#settings-modal" className="btn icon-btn modal-trigger">
                     <i className="material-icons">settings</i>
                 </a>
             </div>
             <SettingsModal/>
+            <ExportModal/>
         </div>
         );
     },
@@ -144,6 +156,130 @@ var SettingsModal = React.createClass({
     toggleBox: function(event) {
         var checked = this.refs.boxCheckbox.checked;
         Grapher._3D.Main.boxLines.visible = checked;
+    }
+});
+
+var ExportModal = React.createClass({
+    getInitialState: function() {
+        return {
+            exportInProgress: false
+        }
+    },
+    render: function() {
+        var exportBtn;
+        if (this.state.exportInProgress) {
+            exportBtn = (
+                <a href="#!" className="btn disabled" style={{marginLeft: '5px'}}>
+                    Exporting <Spinner/>
+                </a>
+            );
+        } else {
+            exportBtn = (
+                <a href="#!" className="btn" style={{marginLeft: '5px'}} onClick={this.exportClicked}>
+                    Export
+                </a>
+            );
+        }
+        return (
+            <div id="3d-modal" className="modal">
+                <div className="modal-content">
+                    <h4>
+                        Export to 3D File
+                        <span className="badge"><b>EXPERIMENTAL</b></span>
+                    </h4>
+                    <hr/>
+
+                    <div className="row">
+                        <div className="col s4">
+                            <b>Extrusion direction</b>
+                            <p>
+                                <input ref="export_dir_opposite" className="with-gap" type="radio" name="export-dir" id="export-dir-1" defaultValue="on" />
+                                <label htmlFor="export-dir-1">Opposite Normals</label>
+                            </p>
+                            <p>
+                                <input ref="export_dir_toward" className="with-gap" type="radio" name="export-dir" id="export-dir-2"/>
+                                <label htmlFor="export-dir-2">Towards Normals</label>
+                            </p>
+                        </div>
+                        <div className="col s4">
+                            <b>Extrusion depth</b>
+                            <input ref="extrude_depth" placeholder="Depth" defaultValue="0.1" id="first_name" type="text" />
+                        </div>
+                        <div className="col s4">
+                            <b>File type</b>
+                            <select ref="filetype_select">
+                                <option value="stl_ascii">STL (ASCII)</option>
+                                <option value="stl_binary">STL (Binary)</option>
+                                <option value="obj">OBJ</option>
+                            </select>
+                            <b>File name</b>
+                            <input ref="filename" placeholder="Name" defaultValue="3dgrapher_export" type="text" />
+                        </div>
+                    </div>
+                </div>
+                <div className="modal-footer">
+                    {exportBtn}
+
+                    <a href="#!" className="modal-action modal-close btn red">
+                        Cancel
+                    </a>
+
+                </div>
+            </div>
+        );
+    },
+    componentDidMount: function() {
+        $('select').material_select();
+    },
+    exportClicked: function() {
+        this.setState({exportInProgress: true});
+
+        setTimeout(function() {
+            var direction;
+            if (this.refs.export_dir_opposite.checked) {
+                direction = 'opposite';
+            } else if (this.refs.export_dir_toward.checked) {
+                direction = 'toward';
+            }
+
+            var depth = this.refs.extrude_depth.value;
+
+            var selectedIndex = this.refs.filetype_select.selectedIndex;
+            var filetype = this.refs.filetype_select.options[selectedIndex].value;
+
+            var filename = this.refs.filename.value;
+
+            var res = Export.exportSurface(direction, depth, filetype, filename);
+            if (res.error) {
+                this.setState({exportInProgress: false});
+                alert("Export failed: " + res.error);
+            } else if (res.success) {
+                this.setState({exportInProgress: false});
+            }
+        }.bind(this), 40);
+    }
+});
+
+var Spinner = React.createClass({
+    render: function() {
+        var style = {
+            verticalAlign: 'middle',
+            width: '20px',
+            height: '20px'
+        };
+        return (
+             <div className="preloader-wrapper small active" style={style}>
+                 <div className="spinner-layer spinner-green-only">
+                     <div className="circle-clipper left">
+                         <div className="circle"></div>
+                     </div><div className="gap-patch">
+                         <div className="circle"></div>
+                     </div><div className="circle-clipper right">
+                         <div className="circle"></div>
+                     </div>
+                 </div>
+             </div>
+        );
     }
 });
 
