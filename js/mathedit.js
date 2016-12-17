@@ -37,8 +37,6 @@ var handleMessage = function(m) {
 
         var mesh = new THREE.Mesh(geo, mat);
 
-        Grapher._3D.Main.surfaces.add(mesh);
-
         Grapher._3D.Main.surfaces.children.forEach(function(s) {
             if (s.name == data.id)
                 s.add(mesh);
@@ -157,17 +155,16 @@ var mathField = MQ.MathField(mathFieldEle, {
     }
 })
 
-Grapher._3D.editGraph = function(latex, text, eqId, lDomain, uDomain) {
+Grapher._3D.editGraph = function(latex, text, eqId, domain) {
     Grapher._3D.removeGraph(eqId);
     Grapher.EquationEntries[eqId] = {
         latex: latex,
         text: text,
-        lDomain: lDomain,
-        uDomain: uDomain
+        domain: domain
     };
 
     try {
-        var res = dograph(latex, text, eqId, lDomain, uDomain);
+        var res = dograph(latex, text, eqId, domain);
         var obj = res.obj;
         obj = res.obj;
         obj.name = eqId;
@@ -190,13 +187,12 @@ Grapher._3D.removeGraph = function(eqId) {
 
 Grapher._3D.refreshAll = function() {
     for (id in Grapher.EquationEntries) {
-        var latex = Grapher.EquationEntries[id].latex;
-        var text = Grapher.EquationEntries[id].text;
-        Grapher._3D.editGraph(latex, text, id);
+        var entry = Grapher.EquationEntries[id];
+        Grapher._3D.editGraph(entry.latex, entry.text, id, entry.domain);
     }
 }
 
-function dograph(latex, text, id, lDomain, uDomain) {
+function dograph(latex, text, id, domain) {
     var obj;
     var type;
 
@@ -204,16 +200,22 @@ function dograph(latex, text, id, lDomain, uDomain) {
     var pointComponents = extractPointComponents(text);
     var parametricComponents = extractParametric(latex);
 
-    console.log("Vector components", vecComponents);
+    var lowerDomainT = 0, upperDomainT = 1;
+    try {
+        lowerDomainT = math.eval(processText(domain.t_lower));
+        upperDomainT = math.eval(processText(domain.t_upper));
+    } catch (e) {}
+    var lowerDomainU = 0, upperDomainU = 1;
+    try {
+        lowerDomainU = math.eval(processText(domain.u_lower));
+        upperDomainU = math.eval(processText(domain.u_upper));
+    } catch (e) {}
+    var lowerDomainV = 0, upperDomainV = 1;
+    try {
+        lowerDomainV = math.eval(processText(domain.v_lower));
+        upperDomainV = math.eval(processText(domain.v_upper));
+    } catch (e) {}
 
-    var lowerDomain = 0;
-    try {
-        lowerDomain = math.eval(processText(lDomain));
-    } catch (e) {}
-    var upperDomain = 1;
-    try {
-        upperDomain = math.eval(processText(uDomain));
-    } catch (e) {}
 
     var paramMode = undefined;
     if (parametricComponents) {
@@ -226,18 +228,22 @@ function dograph(latex, text, id, lDomain, uDomain) {
             paramMode = 'spherical';
         }
     }
+
+
     var vfComponents = extractVF(latex);
     if (parametricComponents && paramMode !== undefined) {
         var vec = math.compile(parametricComponents[3]);
+        var vecExpr = math.parse(parametricComponents[3]);
+
+        var tParamerized = exprContainsSymbol(vecExpr, 't');
+        var uvParamerized = exprContainsSymbol(vecExpr, 'u') && exprContainsSymbol(vecExpr, 'v');
 
         var zc = Grapher.Options.zoomCoeff;
-        var Parametric = THREE.Curve.create(
-            function() {},
-            function(t) {
-                // change 0 < t < 1 to lowerDomain < t < upperDomain
-                t = lowerDomain + (upperDomain - lowerDomain) * t;
-                var evalVec = vec.eval({t: t/zc});
-
+        if (uvParamerized) {
+            var func = function(u, v) {
+                u = lowerDomainU + (upperDomainU - lowerDomainV) * u;
+                v = lowerDomainV + (upperDomainV - lowerDomainV) * v;
+                var evalVec = vec.eval({u: u, v: v});
                 var x = evalVec._data[0][0];
                 var y = evalVec._data[1][0];
                 var z = evalVec._data[2][0];
@@ -256,27 +262,60 @@ function dograph(latex, text, id, lDomain, uDomain) {
                 }
                 return new THREE.Vector3(x/zc, y/zc, z/zc);
             }
-        );
+            var geo = new THREE.ParametricGeometry(func, 100, 100);
+            var mat = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
+            var mesh = new THREE.Mesh(geo, mat);
+            obj = mesh;
+            type = 'parametric_uv';
+        } else {
+           var Parametric = THREE.Curve.create(
+                function() {},
+                function(t) {
+                    // change 0 < t < 1 to lowerDomain < t < upperDomain
+                    t = lowerDomainT + (upperDomainT - lowerDomainT) * t;
+                    var evalVec = vec.eval({t: t});
 
-        var curve = new Parametric();
-        var d = new Date();
-        var geo = new THREE.TubeGeometry(curve, 600, 0.04, 15, false);
-        console.log(new Date() - d);
-        for (var i = 0; i < geo.faces.length; i++) {
-            var face = geo.faces[i];
-            var h = Math.floor(i/30);
-            face.color.setHSL(h/600, 0.75, 0.5);
+                    var x = evalVec._data[0][0];
+                    var y = evalVec._data[1][0];
+                    var z = evalVec._data[2][0];
+                    if (paramMode == 'cylindrical') {
+                        var xNew = x * Math.cos(y);
+                        var yNew = x * Math.sin(y);
+                        x = xNew;
+                        y = yNew;
+                    } else if (paramMode == 'spherical') {
+                        var xNew = x * Math.sin(y) * Math.cos(z);
+                        var yNew = x * Math.sin(y) * Math.sin(z);
+                        var zNew = x * Math.cos(y);
+                        x = xNew;
+                        y = yNew;
+                        z = zNew;
+                    }
+                    return new THREE.Vector3(x/zc, y/zc, z/zc);
+                }
+            );
+
+            var curve = new Parametric();
+            var d = new Date();
+            var geo = new THREE.TubeGeometry(curve, 600, 0.04/zc, 15, false);
+            console.log(new Date() - d);
+            for (var i = 0; i < geo.faces.length; i++) {
+                var face = geo.faces[i];
+                var h = Math.floor(i/30);
+                face.color.setHSL(h/600, 0.75, 0.5);
+            }
+            var mesh = new THREE.Mesh(
+                geo,
+                new THREE.MeshStandardMaterial({
+                    side: THREE.DoubleSide,
+                    vertexColors: THREE.FaceColors
+                })
+            );
+
+            obj = mesh;
+            type = 'parametric';
         }
-        var mesh = new THREE.Mesh(
-            geo,
-            new THREE.MeshStandardMaterial({
-                side: THREE.DoubleSide,
-                vertexColors: THREE.FaceColors
-            })
-        );
 
-        obj = mesh;
-        type = 'parametric';
     } else if (vfComponents) {
         obj = new THREE.Object3D();
         var vec = math.compile(vfComponents);

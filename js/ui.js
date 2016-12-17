@@ -277,8 +277,7 @@ var EquationList = React.createClass({
 var EquationEntry = React.createClass({
     getInitialState: function() {
         return {
-            error: undefined,
-            parametric: false
+            error: undefined
         };
     },
     render: function() {
@@ -296,12 +295,15 @@ var EquationEntry = React.createClass({
             var icon = <img src={iconPath} />
         }
 
-        var domainStyle;
-        if (this.state.parametric) {
-            domainStyle = {};
-        } else {
-            domainStyle = {display: "none"};
+        var domainStyle = {display: "none"};
+        var domainUVStyle = {display: "none"};
+        if (this.state.success) {
+            if (this.state.success.type == 'parametric')
+                domainStyle = {};
+            else if (this.state.success.type == 'parametric_uv')
+                domainUVStyle = {};
         }
+
         return (
             <div className="eq-entry">
                 <table>
@@ -319,9 +321,18 @@ var EquationEntry = React.createClass({
                             <span className="eq-input-container">
                                 <span className="eq-input" ref="eqInput"></span>
                                 <div className="eq-domain" style={domainStyle}>
-                                    <span ref="lowerDomain">0</span>
-                                    <span ref="domainVar">{'\\leq t \\leq'}</span>
-                                    <span ref="upperDomain">1</span>
+                                    <span ref="lowerDomainT">0</span>
+                                    <span ref="domainTVar">{'\\leq t \\leq'}</span>
+                                    <span ref="upperDomainT">1</span>
+                                </div>
+                                <div className="eq-domain" style={domainUVStyle}>
+                                    <span ref="lowerDomainU">0</span>
+                                    <span ref="domainUVar">{'\\leq u \\leq'}</span>
+                                    <span ref="upperDomainU">1</span>
+                                    <b>&nbsp; and &nbsp;</b>
+                                    <span ref="lowerDomainV">0</span>
+                                    <span ref="domainVVar">{'\\leq v \\leq'}</span>
+                                    <span ref="upperDomainV">1</span>
                                 </div>
                             </span>
                         </td>
@@ -352,9 +363,11 @@ var EquationEntry = React.createClass({
         // initialize mathquill
         this.mathField = MQ.MathField(this.refs.eqInput, config);
 
-        MQ.StaticMath(this.refs.domainVar);
+        MQ.StaticMath(this.refs.domainTVar);
+        MQ.StaticMath(this.refs.domainUVar);
+        MQ.StaticMath(this.refs.domainVVar);
 
-        this.lowerDomain = MQ.MathField(this.refs.lowerDomain, {
+        this.lowerDomainT = MQ.MathField(this.refs.lowerDomainT, {
             spaceBehavesLikeTab: true,
             charsThatBreakOutOfSupSub: '+-=<>',
             autoCommands: 'pi theta sqrt phi',
@@ -362,7 +375,39 @@ var EquationEntry = React.createClass({
                 edit: mainConfirmCb.callback
             }
         });
-        this.upperDomain = MQ.MathField(this.refs.upperDomain, {
+        this.upperDomainT = MQ.MathField(this.refs.upperDomainT, {
+            spaceBehavesLikeTab: true,
+            charsThatBreakOutOfSupSub: '+-=<>',
+            autoCommands: 'pi theta sqrt phi',
+            handlers: {
+                edit: mainConfirmCb.callback
+            }
+        });
+        this.lowerDomainU = MQ.MathField(this.refs.lowerDomainU, {
+            spaceBehavesLikeTab: true,
+            charsThatBreakOutOfSupSub: '+-=<>',
+            autoCommands: 'pi theta sqrt phi',
+            handlers: {
+                edit: mainConfirmCb.callback
+            }
+        });
+        this.upperDomainU = MQ.MathField(this.refs.upperDomainU, {
+            spaceBehavesLikeTab: true,
+            charsThatBreakOutOfSupSub: '+-=<>',
+            autoCommands: 'pi theta sqrt phi',
+            handlers: {
+                edit: mainConfirmCb.callback
+            }
+        });
+        this.lowerDomainV = MQ.MathField(this.refs.lowerDomainV, {
+            spaceBehavesLikeTab: true,
+            charsThatBreakOutOfSupSub: '+-=<>',
+            autoCommands: 'pi theta sqrt phi',
+            handlers: {
+                edit: mainConfirmCb.callback
+            }
+        });
+        this.upperDomainV = MQ.MathField(this.refs.upperDomainV, {
             spaceBehavesLikeTab: true,
             charsThatBreakOutOfSupSub: '+-=<>',
             autoCommands: 'pi theta sqrt phi',
@@ -390,8 +435,7 @@ var EquationEntry = React.createClass({
 
         var res = Grapher._3D.editGraph(
             this.getLatex(), this.getText(), this.getEquationId(),
-            this.getLowerDomainText(),
-            this.getUpperDomainText()
+            this.getDomain()
         );
         var error = undefined;
         var success = undefined;
@@ -405,12 +449,10 @@ var EquationEntry = React.createClass({
             success = {
                 type: res['type']
             };
-            parametric = (res['type'] === 'parametric');
         }
         this.setState({
             error: error,
-            success: success,
-            parametric: parametric
+            success: success
         })
         $('.tooltipped').tooltip();
     },
@@ -420,11 +462,15 @@ var EquationEntry = React.createClass({
     getText: function() {
         return this.mathField.text();
     },
-    getLowerDomainText: function() {
-        return this.lowerDomain.text();
-    },
-    getUpperDomainText: function() {
-        return this.upperDomain.text()
+    getDomain: function() {
+        return {
+            't_lower': this.lowerDomainT.text(),
+            't_upper': this.upperDomainT.text(),
+            'u_lower': this.lowerDomainU.text(),
+            'u_upper': this.upperDomainU.text(),
+            'v_lower': this.lowerDomainV.text(),
+            'v_upper': this.upperDomainV.text()
+        }
     },
     onDelete: function() {
         this.props.deleteCb(this.props.myKey, this.getEquationId());

@@ -320,3 +320,11 @@ input[type="color"] + label {
   background: linear-gradient(to right, rgba(97,202,250,1) 0%, rgba(97,202,250,1) 69%, rgba(216,243,252,1) 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#61cafa', endColorstr='#d8f3fc', GradientType=1 );
 }
+
+.eq-domain .mq-editable-field {
+    border: none;
+    background-color: #ddd;
+    border-radius: 2px;
+    padding: 2px 4px;
+}
+
