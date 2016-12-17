@@ -103,7 +103,7 @@ function init() {
 
     // LIGHT
     var light = new THREE.PointLight(0xffffff);
-    light.position.set(0,250,0);
+    light.position.set(0,0,250);
     scene.add(light);
 
     var ambient = new THREE.AmbientLight( 0xFFFFFF );
