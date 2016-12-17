@@ -8,3 +8,5 @@ require('./vendor/mathquill.min.js'); // mutates window; must come after jQuery
 
 // code for our actual app
 require('babel?presets=react!./ui.js'); // mutates window.Grapher
+
+window.setReplaceLatex = function(){};
