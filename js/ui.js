@@ -387,6 +387,8 @@ var EquationList = React.createClass({
       );
     },
     setLatexList: function(latexList) {
+        // TODO: banner hiding should be done inside app
+        $("#header").hide();
         setTimeout(function() {
           for (var i = 0; i < this.state.eqs.length; i++) {
               var entry = this.refs['child_'+i];
