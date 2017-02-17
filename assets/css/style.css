@@ -58,8 +58,7 @@ html, body{
 
 .row {
     margin: 0;
-    height: calc(100% - 64px);
-    height: -moz-calc(100% - 64px);
+    height: 100%;
 }
 
 .row .eqs-col, .row .graph-col {
